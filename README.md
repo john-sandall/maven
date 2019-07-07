@@ -18,8 +18,8 @@ maven.get('general_election-gb-2015-results', data_directory='../data/')
 ## Datasets
 
 | Dataset | Date | Source | Licence | Data Dictionary |
-| -- | -- | -- | -- | -- | -- |
-| UK 2015 General Election | 7th May 2015 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) | [data/general_election/](datasets/general_election/README.md) |
+| -- | -- | -- | -- | -- |
+| **UK 2015 General Election** | 7th May 2015 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) | [data/general_election/](datasets/general_election/README.md) |
 
 
 ## Licences
