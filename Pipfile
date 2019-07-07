@@ -7,6 +7,9 @@ verify_ssl = true
 
 [packages]
 requests = "*"
+pandas = "*"
+ipython = "*"
+xlrd = "*"
 
 [requires]
 python_version = "3.7"
