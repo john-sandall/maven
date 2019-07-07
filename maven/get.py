@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .datasets.general_election import gb_2015_results as GE_gb_2015_results
+from .datasets import general_election
 
 
 def get(name, data_directory=Path('.'), retrieve=True, process=True):
@@ -17,19 +17,19 @@ def get(name, data_directory=Path('.'), retrieve=True, process=True):
     """
     mapper = {
         'general_election-gb-2015-results': {
-            'pipeline': GE_gb_2015_results,
+            'pipeline': general_election.GB2015Results,
             'path': 'general_election/GB/2015/results',
         }
     }
     if name not in mapper:
         raise KeyError(f'{name} not found in datasets.')
-    pipeline = mapper[name]['pipeline']
 
     if isinstance(data_directory, str):
         data_directory = Path(data_directory)
     directory = data_directory / mapper[name]['path']
+    pipeline = mapper[name]['pipeline'](directory=directory)
 
     if retrieve:
-        pipeline.retrieve(directory=directory)
+        pipeline.retrieve()
     if process:
-        pipeline.process(directory=directory)
+        pipeline.process()

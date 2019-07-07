@@ -14,103 +14,108 @@ import pandas as pd
 import requests
 
 
-def retrieve(directory=Path('.')):
-    """Retrieve results data for the United Kingdom's 2010 General Election."""
-    url = 'http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/'
-    filename = '2015-UK-general-election-data-results-WEB.zip'
-    target = directory / 'raw'
-    os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
+class GB2015Results:
+    """Handles results data for the United Kingdom's 2010 General Election."""
 
-    print(f'Downloading into {target.resolve()}')
-    with open(target / filename, 'wb') as f:
-        response = requests.get(url + filename)
-        f.write(response.content)
+    def __init__(self, directory=Path('.')):
+        self.directory = directory
 
-    print(f'Extracting into {target.resolve()}')
-    with zipfile.ZipFile(target / filename, 'r') as f:
-        f.extractall(target)
+    def retrieve(self):
+        """Retrieve results data for the United Kingdom's 2010 General Election."""
+        url = 'http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/'
+        filename = '2015-UK-general-election-data-results-WEB.zip'
+        target = self.directory / 'raw'
+        os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
 
-    print('Cleaning up')
-    os.remove(target / filename)
+        print(f'Downloading into {target.resolve()}')
+        with open(target / filename, 'wb') as f:
+            response = requests.get(url + filename)
+            f.write(response.content)
 
+        print(f'Extracting into {target.resolve()}')
+        with zipfile.ZipFile(target / filename, 'r') as f:
+            f.extractall(target)
 
-def process(directory=Path('.')):
-    """Process results data for the United Kingdom's 2015 General Election."""
-    processed_filename = 'general_election-gb-2015-results.csv'
-    processed_dataset_location = (directory / 'processed' / processed_filename)
-    os.makedirs(directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
+        print('Cleaning up')
+        os.remove(target / filename)
 
-    # TODO: Refactor these sections into functions to make it easier to read.
+    def process(self):
+        """Process results data for the United Kingdom's 2015 General Election."""
+        processed_filename = 'general_election-gb-2015-results.csv'
+        processed_dataset_location = (self.directory / 'processed' / processed_filename)
+        os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
-    ##########################
-    # GENERAL ELECTION RESULTS
-    ##########################
-    print('Read and clean RESULTS FOR ANALYSIS.csv')
+        # TODO: Refactor these sections into functions to make it easier to read.
 
-    # Import general election results
-    results = pd.read_csv(directory / 'raw' / 'RESULTS FOR ANALYSIS.csv')
+        ##########################
+        # GENERAL ELECTION RESULTS
+        ##########################
+        print('Read and clean RESULTS FOR ANALYSIS.csv')
 
-    # Remove 'Unnamed: 9' columnd
-    del results['Unnamed: 9']
+        # Import general election results
+        results = pd.read_csv(self.directory / 'raw' / 'RESULTS FOR ANALYSIS.csv')
 
-    # Fix bad column name (' Total number of valid votes counted ' to 'Valid Votes')
-    results.columns = list(results.columns[:8]) + ['Valid Votes'] + list(results.columns[9:])
+        # Remove 'Unnamed: 9' columnd
+        del results['Unnamed: 9']
 
-    # Remove rows where Constituency Name is blank
-    blank_rows = results['Constituency Name'].isnull()
-    results = results[-blank_rows].copy()
+        # Fix bad column name (' Total number of valid votes counted ' to 'Valid Votes')
+        results.columns = list(results.columns[:8]) + ['Valid Votes'] + list(results.columns[9:])
 
-    # Remove commas & coerce Electorate and Total number of valid votes counted
-    for col in ['Electorate', 'Valid Votes']:
-        results[col] = results[col].apply(lambda x: float(x.replace(",", "")))
+        # Remove rows where Constituency Name is blank
+        blank_rows = results['Constituency Name'].isnull()
+        results = results[-blank_rows].copy()
 
-    # Set NA vals to zero
-    for col in results.columns[9:]:
-        results[col] = results[col].fillna(0)
+        # Remove commas & coerce Electorate and Total number of valid votes counted
+        for col in ['Electorate', 'Valid Votes']:
+            results[col] = results[col].apply(lambda x: float(x.replace(",", "")))
 
-    # Checks
-    assert results.shape == (650, 146)
+        # Set NA vals to zero
+        for col in results.columns[9:]:
+            results[col] = results[col].fillna(0)
 
-    ###################
-    # CONSTITUENCY DATA
-    ###################
-    print('Read and clean CONSTITUENCY.csv')
+        # Checks
+        assert results.shape == (650, 146)
 
-    # Import constituency data
-    constituency = pd.read_csv(directory / 'raw' / 'CONSTITUENCY.csv', encoding='latin1')
+        ###################
+        # CONSTITUENCY DATA
+        ###################
+        print('Read and clean CONSTITUENCY.csv')
 
-    # Remove rows where Constituency Name is blank
-    blank_rows = constituency['Constituency Name'].isnull()
-    constituency = constituency[-blank_rows].copy()
+        # Import constituency data
+        constituency = pd.read_csv(self.directory / 'raw' / 'CONSTITUENCY.csv', encoding='latin1')
 
-    # Remove 'Unnamed: 6' columnd
-    del constituency['Unnamed: 6']
+        # Remove rows where Constituency Name is blank
+        blank_rows = constituency['Constituency Name'].isnull()
+        constituency = constituency[-blank_rows].copy()
 
-    # Checks
-    assert constituency.shape == (650, 10)
+        # Remove 'Unnamed: 6' columnd
+        del constituency['Unnamed: 6']
 
-    #######
-    # MERGE
-    #######
-    print(f'Merging and exporting dataset to {processed_dataset_location.resolve()}')
+        # Checks
+        assert constituency.shape == (650, 10)
 
-    # Pre-merge checks
-    match_col = 'Constituency ID'
-    assert len(set(constituency[match_col]).intersection(set(results[match_col]))) == 650
-    assert len(set(constituency[match_col]).difference(set(results[match_col]))) == 0
-    assert len(set(results[match_col]).difference(set(constituency[match_col]))) == 0
+        #######
+        # MERGE
+        #######
+        print(f'Merging and exporting dataset to {processed_dataset_location.resolve()}')
 
-    # Merge on Constituency ID
-    results = pd.merge(
-        left=results,
-        right=constituency[['Constituency ID', 'Region ID', 'County']],
-        how='left',
-        on='Constituency ID'
-    )
+        # Pre-merge checks
+        match_col = 'Constituency ID'
+        assert len(set(constituency[match_col]).intersection(set(results[match_col]))) == 650
+        assert len(set(constituency[match_col]).difference(set(results[match_col]))) == 0
+        assert len(set(results[match_col]).difference(set(constituency[match_col]))) == 0
 
-    # EXPORT
-    column_order = ['Press Association ID Number', 'Constituency ID', 'Constituency Name', 'Constituency Type',
-                    'County', 'Region ID', 'Region', 'Country', 'Election Year', 'Electorate',
-                    'Valid Votes'] + list(results.columns[9:146])
-    results = results[column_order]
-    results.to_csv(processed_dataset_location, index=False)
+        # Merge on Constituency ID
+        results = pd.merge(
+            left=results,
+            right=constituency[['Constituency ID', 'Region ID', 'County']],
+            how='left',
+            on='Constituency ID'
+        )
+
+        # EXPORT
+        column_order = ['Press Association ID Number', 'Constituency ID', 'Constituency Name', 'Constituency Type',
+                        'County', 'Region ID', 'Region', 'Country', 'Election Year', 'Electorate',
+                        'Valid Votes'] + list(results.columns[9:146])
+        results = results[column_order]
+        results.to_csv(processed_dataset_location, index=False)
