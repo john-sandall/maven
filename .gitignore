@@ -2,3 +2,5 @@
 build/
 dist/
 maven.egg-info/
+
+*.pyc
