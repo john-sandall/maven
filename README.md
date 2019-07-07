@@ -1,5 +1,13 @@
 # Maven
-> /meɪvən/ – a trusted expert in a particular field, who seeks to pass timely and relevant knowledge on to others in the respective field.
+> /meɪvən/ – a trusted expert who seeks to pass timely and relevant knowledge on to others.
+
+Maven's goal is to reduce the time data scientists spend on data cleaning and preparation by providing easy access to open datasets in both raw and processed formats.
+
+Maven was built to:
+
+- **Improve availability and integrity of open data** by eliminating data issues, adding common identifiers, and reshaping data to become model-ready.
+- **Source data in its rawest form** from the most authoritative data provider available with all transformations available as open source code to enhance integrity and trust.
+- **Honour data licences wherever possible** whilst avoiding potential issues relating to re-distribution of data (especially open datasets where no clear licence is provided) by performing all data retrieval and processing on-device.
 
 
 ## Install

@@ -1,13 +1,14 @@
 import setuptools
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
 
 setuptools.setup(
     name='maven',
     version='0.0.2',
-    description='A trusted expert who seeks to pass timely and relevant knowledge on to others.',
+    description=("Maven's goal is to reduce the time data scientists spend on data cleaning and preparation"
+                 "by providing easy access to open datasets in both raw and processed formats."),
     long_description=long_description,
     long_description_content_type='text/markdown',
     keywords='maven open data etl pipeline',
