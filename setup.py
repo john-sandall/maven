@@ -7,7 +7,7 @@ with open('README.md', 'r') as f:
 setuptools.setup(
     name='maven',
     version='0.0.4',
-    description=("Maven's goal is to reduce the time data scientists spend on data cleaning and preparation"
+    description=("Maven's goal is to reduce the time data scientists spend on data cleaning and preparation "
                  "by providing easy access to open datasets in both raw and processed formats."),
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -24,7 +24,7 @@ setuptools.setup(
     license='Apache 2.0',
     zip_safe=False,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
