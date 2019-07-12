@@ -4,7 +4,8 @@ Results data for the United Kingdom's 2015 General Election.
 Source: http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/2015-UK-general-election-data-results-WEB.zip
 
 Usage:
-    python -m data.european_parliament.2014.scripts.retrieve_electoral_commission
+    > import maven
+    > maven.get('general-election/GB/2015/results', data_directory='./data/')
 """
 import os
 import zipfile
@@ -18,7 +19,7 @@ class GB2015Results:
     """Handles results data for the United Kingdom's 2010 General Election."""
 
     def __init__(self, directory=Path('.')):
-        self.directory = directory
+        self.directory = Path(directory)
 
     def retrieve(self):
         """Retrieve results data for the United Kingdom's 2010 General Election."""
@@ -97,7 +98,7 @@ class GB2015Results:
         #######
         # MERGE
         #######
-        print(f'Merging and exporting dataset to {processed_dataset_location.resolve()}')
+        print('Merging in constituency identifiers')
 
         # Pre-merge checks
         match_col = 'Constituency ID'
@@ -112,10 +113,79 @@ class GB2015Results:
             how='left',
             on='Constituency ID'
         )
-
-        # EXPORT
         column_order = ['Press Association ID Number', 'Constituency ID', 'Constituency Name', 'Constituency Type',
                         'County', 'Region ID', 'Region', 'Country', 'Election Year', 'Electorate',
                         'Valid Votes'] + list(results.columns[9:146])
-        results = results[column_order]
+        results = results[column_order].copy()
+
+
+        ############################
+        # ADDITIONAL TRANSFORMATIONS
+        ############################
+        # Some MPs are members of both the Labour Party and the Co-operative Party, which plays havoc with modelling.
+        # We will therefore consider them all members of the Labour party.
+        results['Lab'] = results['Lab'] + results['Lab Co-op']
+        del results['Lab Co-op']
+
+        # Save this for convenience
+        results_full = results.copy()
+
+        # Filter to metadata cols + parties of interest
+        parties_lookup = {
+            'C': 'con',
+            'Lab': 'lab',
+            'LD': 'ld',
+            'UKIP': 'ukip',
+            'Green': 'grn',
+            'SNP': 'snp',
+            'PC': 'pc',
+            'Other': 'other'
+        }
+        other_parties = list(set(results.columns) - set(results.columns[:11]) - set(parties_lookup.keys()))
+        results['Other'] = results.loc[:, other_parties].sum(axis=1)
+        results = results.loc[:, list(results.columns[:11]) + list(parties_lookup.keys())]
+        # Rename parties
+        results.columns = [parties_lookup[x] if x in parties_lookup else x for x in results.columns]
+
+        # Calculate constituency level vote share
+        for party in parties_lookup.values():
+            results[party + '_pc'] = results[party] / results['Valid Votes']
+
+        # Create PANO -> geo lookup
+        geo_lookup = {x[1][0]: x[1][1] for x in results[['Press Association ID Number', 'Country']].iterrows()}
+        assert geo_lookup[14.0] == 'Northern Ireland'
+        # Add London boroughs
+        london_panos = results[results.County == 'London']['Press Association ID Number'].values
+        for pano in london_panos:
+            geo_lookup[pano] = 'London'
+        assert geo_lookup[237.0] == 'London'
+        # Rename other England
+        for k in geo_lookup:
+            if geo_lookup[k] == 'England':
+                geo_lookup[k] = 'England_not_london'
+            elif geo_lookup[k] == 'Northern Ireland':
+                geo_lookup[k] = 'NI'
+        results['geo'] = results['Press Association ID Number'].map(geo_lookup)
+
+        # Calculate geo-level vote share
+        results_by_geo = results.loc[:, ['Valid Votes', 'geo'] + list(parties_lookup.values())].groupby('geo').sum()
+        results_by_geo_voteshare = results_by_geo.div(results_by_geo['Valid Votes'], axis=0)
+        del results_by_geo_voteshare['Valid Votes']
+
+        # Who won?
+        def winner(row):
+            all_parties = set(results_full.columns[11:]) - set(['Other'])
+            winning_party = row[all_parties].sort_values(ascending=False).index[0]
+            if winning_party in parties_lookup.keys():
+                winning_party = parties_lookup[winning_party]
+            elif winning_party == 'Speaker':
+                winning_party = 'other'
+            return winning_party
+
+        results['winner'] = results_full.apply(winner, axis=1)
+        # Check Conservatives won 330 seats in 2015.
+        assert results.groupby('winner').count()['Constituency Name'].sort_values(ascending=False)[0] == 330
+
+        # EXPORT
+        print(f'Exporting dataset to {processed_dataset_location.resolve()}')
         results.to_csv(processed_dataset_location, index=False)

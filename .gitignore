@@ -1,5 +1,6 @@
 .venv/
 build/
+data/
 dist/
 maven.egg-info/
 

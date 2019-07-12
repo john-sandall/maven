@@ -3,7 +3,7 @@ Main data getting functionality. Maps data identifiers to data pipeline classes.
 
 Example usage:
     > import maven
-    > maven.get('general-election/GB/2015/results', data_directory='../data/')
+    > maven.get('general-election/GB/2015/results', data_directory='./data/')
 """
 
 from pathlib import Path

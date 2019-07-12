@@ -19,7 +19,7 @@ pip install maven
 ## Usage
 ```python
 import maven
-maven.get('general-election/GB/2015/results', data_directory='../data/')
+maven.get('general-election/GB/2015/results', data_directory='./data/')
 ```
 
 
