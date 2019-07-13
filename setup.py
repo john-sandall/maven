@@ -19,10 +19,11 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'pandas',
-        'pytest',
         'requests',
         'xlrd',
     ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     license='Apache 2.0',
     zip_safe=False,
     classifiers=[
