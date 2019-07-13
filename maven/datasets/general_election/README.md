@@ -46,7 +46,6 @@ We aim to source our data directly from the most authorative data provider, fall
 | `winner` | str | Winning party with most votes in this constituency  | `lab` |
 
 
-
 #### **`general-election/UK/2015/results`**
 | Column | Type | Description | Example |
 | -- | -- | -- | -- |
@@ -79,3 +78,21 @@ We aim to source our data directly from the most authorative data provider, fall
 | `other_pc` | float | Percentage voteshare for all other parties (combined) in this constituency | `0.0514862` |
 | `winner` | str | Winning party with most votes in this constituency  | `lab` |
 | `geo` | str | Model-specific regions: {`Wales`, `Scotland`, `England_not_london`, `NI`, `London`}  | `Wales` |
+
+
+#### **`general-election/UK/polls`**
+| Column | Type | Description | Example |
+| -- | -- | -- | -- |
+| `company` | str | Name of company conducting opinion poll | `Ipsos MORI Phone` |
+| `client` | str | Name of client/publisher commissioning the poll | `Evening Standard` |
+| `method` | str | Methodology: {`Online`, `Phone`, `Mobile`} | `Phone` |
+| `from` | date | Date fieldwork started | `2017-06-06` |
+| `to` | date | Date fieldwork completed | `2017-06-07` |
+| `sample_size` | int | Sample size of poll | `1291` |
+| `con` | float | National percentage voteshare for the Conservative party | `0.44` |
+| `lab` | float | National percentage voteshare for the Labour party | `0.36` |
+| `ld` | float | National percentage voteshare for the Liberal Democrat party | `0.07` |
+| `ukip` | float | National percentage voteshare for UKIP | `0.04` |
+| `grn` | float | National percentage voteshare for the Green party | `0.02` |
+| `snp` | float | National percentage voteshare for the SNP | `0.05` |
+| `pdf` | str | Download URL of PDF tables containing raw data | `https://www.ipsos.com/sites/default/files/2017-06/pm-election-2017-final-tables.pdf` |

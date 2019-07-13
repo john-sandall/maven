@@ -26,6 +26,7 @@ def get(name, data_directory=Path('.'), retrieve=True, process=True):
     mapper = {
         'general-election/UK/2010/results': general_election.UK2010Results,
         'general-election/UK/2015/results': general_election.UK2015Results,
+        'general-election/UK/polls': general_election.UKPolls,
         }
     if name not in mapper:
         raise KeyError(f'"{name}" not found in datasets.')
