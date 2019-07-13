@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Opinion polling data for UK General Elections.
+
+## [0.0.5] - 2019-07-13
+### Added
 - Basic tests for `get.py`
 - Additional processing for the GE2015 results pipeline to generate a more useful dataset for common election modelling tasks.
 - Added `general-election/UK/2010/results` dataset.
@@ -33,7 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Barebones functionality, Python package requirements (setup.py, Pipfile, .gitignore, LICENSE)
 
 
-[Unreleased]: https://github.com/john-sandall/maven/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/john-sandall/maven/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/john-sandall/maven/compare/v0.0.4...v0.0.5
+[0.0.4]: https://github.com/john-sandall/maven/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/john-sandall/maven/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/john-sandall/maven/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/john-sandall/maven/releases/tag/v0.0.1
