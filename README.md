@@ -28,7 +28,11 @@ Data dictionaries for all datasets are available by clicking on the dataset's na
 
 | Dataset | Description | Date | Source | Licence |
 | -- | -- | -- | -- | -- |
+| [**`general-election/UK/2015/model`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | Model-ready datasets for forecasting the 2015 and 2017 UK General Elections | 2010, 2015 & 2017 data | [SixFifty](https://github.com/six50/) | Mixed |
+| [**`general-election/UK/2010/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2010 General Election results | 6th May 2010 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) |
 | [**`general-election/UK/2015/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2015 General Election results | 7th May 2015 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) |
+| [**`general-election/UK/polls`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK General Election opinion polling | May 2005 - June 2017 | [SixFifty](https://github.com/six50/pipeline/tree/master/data/polls/) | Unknown |
+
 
 
 ## Running tests

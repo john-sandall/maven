@@ -11,6 +11,44 @@ We aim to source our data directly from the most authorative data provider, fall
 
 ## Data dictionaries
 
+#### **`general-election/UK/2015/model`**
+| Column | Type | Description | Example |
+| -- | -- | -- | -- |
+| `Press Association Reference` | int | Standardised constituency identifier | `1` |
+| `Constituency Name` | str | Constituency name | `Aberavon` |
+| `Region` | str | Region:{`East Midlands`, `Eastern`, `London`, `North East`, `North West`, `Northern Ireland`, `Scotland`, `South East`, `South West`, `Wales`, `West Midlands`, `Yorkshire and The Humber`} | `Wales` |
+| `Electorate` | int | Electorate | `50838` |
+| `Votes` | int | Valid votes counted | `30958` |
+| `Party` | str | Party | `con` |
+| `votes_last` | int | Votes counted in 2010 | `4411` |
+| `pc_last` | float | Percentage voteshare in 2010 | `0.142483365` |
+| `win_last` | str | Which party won in this constituency in 2010 | `lab` |
+| `polls_now` | float | National polling for this party in 2015 | `0.338181818` |
+| `swing_now` | float | Uplift in national polling for this party since 2010 | `-0.062020512` |
+| `swing_forecast_pc` | float | Projected voteshare for this party in this constituency using a UNS model | `0.133646473` |
+| `swing_forecast_win` | str | Projected winner in this constituency using a UNS model | `lab` |
+| `actual_win_now` | str | Which party actually won this constituency in 2015? | `lab` |
+| `actual_pc_now` | float | Actual percentage voteshare for this party in this constituency in 2015 | `0.118706976` |
+| `con` | int | Dummy: is Conservative party? | `1` |
+| `grn` | int | Dummy: is Green party? | `0` |
+| `lab` | int | Dummy: is Labour party? | `0` |
+| `ld` | int | Dummy: is Liberal Democrat party? | `0` |
+| `Region_East Midlands` | int | Dummied region | `0` |
+| `Region_Eastern` | int | Dummied region | `0` |
+| `Region_London` | int | Dummied region | `0` |
+| `Region_North East` | int | Dummied region | `0` |
+| `Region_North West` | int | Dummied region | `0` |
+| `Region_Northern Ireland` | int | Dummied region | `0` |
+| `Region_Scotland` | int | Dummied region | `0` |
+| `Region_South East` | int | Dummied region | `0` |
+| `Region_South West` | int | Dummied region | `0` |
+| `Region_Wales` | int | Dummied region | `1` |
+| `Region_West Midlands` | int | Dummied region | `0` |
+| `Region_Yorkshire and the Humber` | int | Dummied region | `0` |
+| `won_here_last` | int | Did this party win this constituency in 2010? | `0` |
+| `turnout Midlands` | float | Turnout in 2015 | `0.608953932` |
+
+
 #### **`general-election/UK/2010/results`**
 | Column | Type | Description | Example |
 | -- | -- | -- | -- |

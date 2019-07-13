@@ -20,7 +20,7 @@ import requests
 class UK2010Results:
     """Handles results data for the United Kingdom's 2010 General Election."""
 
-    def __init__(self, directory=Path('general-election/UK/2010/results')):
+    def __init__(self, directory=Path('data/general-election/UK/2010/results')):
         self.directory = Path(directory)
 
     def retrieve(self):
@@ -45,8 +45,10 @@ class UK2010Results:
 
     def process(self):
         """Process results data for the United Kingdom's 2010 General Election."""
-        processed_filename = 'general_election-uk-2010-results.csv'
-        processed_dataset_location = (self.directory / 'processed' / processed_filename)
+        processed_results_filename = 'general_election-uk-2010-results.csv'
+        processed_results_full_filename = 'general_election-uk-2010-results-full.csv'
+        processed_results_location = (self.directory / 'processed' / processed_results_filename)
+        processed_results_full_location = (self.directory / 'processed' / processed_results_full_filename)
         os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
         # TODO: Refactor these sections into functions to make it easier to read.
@@ -142,5 +144,6 @@ class UK2010Results:
         assert results.groupby('winner').count()['Constituency Name'].sort_values(ascending=False)[0] == 306
 
         # EXPORT
-        print(f'Exporting dataset to {processed_dataset_location.resolve()}')
-        results.to_csv(processed_dataset_location, index=False)
+        print(f'Exporting dataset to {processed_results_location.resolve()}')
+        results.to_csv(processed_results_location, index=False)
+        results_full.to_csv(processed_results_full_location, index=False)
