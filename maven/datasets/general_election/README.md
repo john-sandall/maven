@@ -11,7 +11,43 @@ We aim to source our data directly from the most authorative data provider, fall
 
 ## Data dictionaries
 
-#### **`general-election/GB/2015/results`**
+#### **`general-election/UK/2010/results`**
+| Column | Type | Description | Example |
+| -- | -- | -- | -- |
+| `Press Association Reference` | int | Standardised constituency identifier | `1` |
+| `Constituency Name` | str | Constituency name | `Aberavon` |
+| `Region` | str | Region:{`East Midlands`, `Eastern`, `London`, `North East`, `North West`, `Northern Ireland`, `Scotland`, `South East`, `South West`, `Wales`, `West Midlands`, `Yorkshire and The Humber`} | `Wales` |
+| `Election Year` | int | Year | Always `2010` |
+| `Electorate` | int | Electorate | `50838` |
+| `Votes` | int | Valid votes counted | `30958` |
+| `con` | int | Votes for the Conservative party in this constituency | `4411` |
+| `lab` | int | Votes for the Labour party in this constituency | `16073` |
+| `ld` | int | Votes for the Liberal Democrat party in this constituency | `5034` |
+| `ukip` | int | Votes for the UKIP party in this constituency | `489` |
+| `grn` | int | Votes for the Green party in this constituency | `0` |
+| `dup` | int | Votes for the DUP in this constituency | `0` |
+| `sf` | int | Votes for Sinn Féin in this constituency | `0` |
+| `sdlp` | int | Votes for the SDLP in this constituency | `0` |
+| `snp` | int | Votes for the SNP in this constituency | `0` |
+| `pc` | int | Votes for Plaid Cymru in this constituency | `2198` |
+| `other` | int | Votes for all other parties (combined) in this constituency | `2753` |
+| `con_pc` | float | Percentage voteshare for the Conservative party in this constituency | `0.142483365` |
+| `lab_pc` | float | Percentage voteshare for the Labour party in this constituency | `0.519187286` |
+| `ld_pc` | float | Percentage voteshare for the Liberal Democrat party in this constituency | `0.162607404` |
+| `ukip_pc` | float | Percentage voteshare for the UKIP party in this constituency | `0.015795594` |
+| `grn_pc` | float | Percentage voteshare for the Green party in this constituency | `0` |
+| `dup_pc` | float | Percentage voteshare for the DUP in this constituency | `0` |
+| `sf_pc` | float | Percentage voteshare for Sinn Féin party in this constituency | `0` |
+| `sdlp_pc` | float | Percentage voteshare for the SDLP in this constituency | `0` |
+| `snp_pc` | float | Percentage voteshare for the SNP in this constituency | `0` |
+| `pc_pc` | float | Percentage voteshare for Plaid Cymru in this constituency | `0.070999419` |
+| `other_pc` | float | Percentage voteshare for all other parties (combined) in this constituency | `0.088926933` |
+| `geo` | str | Model-specific regions: {`Wales`, `Scotland`, `England_not_london`, `NI`, `London`}  | `Wales` |
+| `winner` | str | Winning party with most votes in this constituency  | `lab` |
+
+
+
+#### **`general-election/UK/2015/results`**
 | Column | Type | Description | Example |
 | -- | -- | -- | -- |
 | `Press Association ID Number` | int | Standardised constituency identifier | `1` |

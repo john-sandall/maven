@@ -6,8 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- Basic tests for `get.py`
+- Additional processing for the GE2015 results pipeline to generate a more useful dataset for common election modelling tasks.
+- Added `general-election/UK/2010/results` dataset.
 ### Changed
 - API design for dataset identifiers to use dash/slash instead of underscore/dash and capitalised country codes to make it clearer these will be ISO 3166 Alpha-2 codes, e.g. `general_election-gb-2015-results` -> `general-election/GB/2015/results`.
+- Changed GB to UK everywhere as these results are full UK results including Northern Ireland.
 
 ## [0.0.4] - 2019-07-07
 ### Fixes

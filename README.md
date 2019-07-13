@@ -19,7 +19,7 @@ pip install maven
 ## Usage
 ```python
 import maven
-maven.get('general-election/GB/2015/results', data_directory='./data/')
+maven.get('general-election/UK/2015/results', data_directory='./data/')
 ```
 
 
@@ -28,7 +28,21 @@ Data dictionaries for all datasets are available by clicking on the dataset's na
 
 | Dataset | Description | Date | Source | Licence |
 | -- | -- | -- | -- | -- |
-| [**`general-election/GB/2015/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election#general_election-gb-2015-results) | UK 2015 General Election results | 7th May 2015 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) |
+| [**`general-election/UK/2015/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2015 General Election results | 7th May 2015 | [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data) | [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/) |
+
+
+## Running tests
+To run tests against an installed version (either `pip install .` or `pip install maven`):
+```
+$ cd /path/to/repo
+$ pytest
+```
+
+To run tests whilst in development:
+```
+$ cd /path/to/repo
+$ python -m pytest
+```
 
 
 ## Licences

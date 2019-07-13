@@ -21,4 +21,4 @@ def test_nonexisting_identifier():
 def test_process_with_retrieve():
     # TODO: This is a useful test for now but we should actually handle this explicitly with a better error message.
     with pytest.raises(FileNotFoundError):
-        maven.get('general-election/GB/2015/results', retrieve=False, process=True)
+        maven.get('general-election/UK/2015/results', retrieve=False, process=True)

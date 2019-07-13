@@ -3,7 +3,7 @@ Main data getting functionality. Maps data identifiers to data pipeline classes.
 
 Example usage:
     > import maven
-    > maven.get('general-election/GB/2015/results', data_directory='./data/')
+    > maven.get('general-election/UK/2015/results', data_directory='./data/')
 """
 
 from pathlib import Path
@@ -24,7 +24,8 @@ def get(name, data_directory=Path('.'), retrieve=True, process=True):
     Returns: Nothing (datasets are placed into current working directory).
     """
     mapper = {
-        'general-election/GB/2015/results': general_election.GB2015Results,
+        'general-election/UK/2010/results': general_election.UK2010Results,
+        'general-election/UK/2015/results': general_election.UK2015Results,
         }
     if name not in mapper:
         raise KeyError(f'"{name}" not found in datasets.')

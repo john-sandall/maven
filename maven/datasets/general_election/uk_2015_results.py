@@ -5,7 +5,7 @@ Source: http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/201
 
 Usage:
     > import maven
-    > maven.get('general-election/GB/2015/results', data_directory='./data/')
+    > maven.get('general-election/UK/2015/results', data_directory='./data/')
 """
 import os
 import zipfile
@@ -15,14 +15,14 @@ import pandas as pd
 import requests
 
 
-class GB2015Results:
-    """Handles results data for the United Kingdom's 2010 General Election."""
+class UK2015Results:
+    """Handles results data for the United Kingdom's 2015 General Election."""
 
-    def __init__(self, directory=Path('.')):
+    def __init__(self, directory=Path('general-election/UK/2015/results')):
         self.directory = Path(directory)
 
     def retrieve(self):
-        """Retrieve results data for the United Kingdom's 2010 General Election."""
+        """Retrieve results data for the United Kingdom's 2015 General Election."""
         url = 'http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/'
         filename = '2015-UK-general-election-data-results-WEB.zip'
         target = self.directory / 'raw'
@@ -42,7 +42,7 @@ class GB2015Results:
 
     def process(self):
         """Process results data for the United Kingdom's 2015 General Election."""
-        processed_filename = 'general_election-gb-2015-results.csv'
+        processed_filename = 'general_election-uk-2015-results.csv'
         processed_dataset_location = (self.directory / 'processed' / processed_filename)
         os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
@@ -168,6 +168,7 @@ class GB2015Results:
         results['geo'] = results['Press Association ID Number'].map(geo_lookup)
 
         # Calculate geo-level vote share
+        # TODO: Do we use this?
         results_by_geo = results.loc[:, ['Valid Votes', 'geo'] + list(parties_lookup.values())].groupby('geo').sum()
         results_by_geo_voteshare = results_by_geo.div(results_by_geo['Valid Votes'], axis=0)
         del results_by_geo_voteshare['Valid Votes']
