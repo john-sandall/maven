@@ -23,6 +23,7 @@ setuptools.setup(
         'xlrd',
     ],
     setup_requires=['pytest-runner'],
+    test_suite='tests',
     tests_require=['pytest'],
     license='Apache 2.0',
     zip_safe=False,
