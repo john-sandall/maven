@@ -5,3 +5,7 @@ dist/
 maven.egg-info/
 
 *.pyc
+notes-maven*
+.vscode
+*.egg
+.eggs
