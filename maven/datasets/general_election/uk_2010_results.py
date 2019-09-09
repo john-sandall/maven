@@ -22,12 +22,7 @@ class UK2010Results:
 
     def __init__(self, directory=Path("data/general-election/UK/2010/results")):
         self.directory = Path(directory)
-
-    def retrieve(self):
-        """Retrieve results data for the United Kingdom's 2010 General Election."""
-        target = self.directory / "raw"
-        os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
-        sources = [
+        self.sources = [
             (
                 "http://www.electoralcommission.org.uk/__data/assets/excel_doc/0003/105726/",
                 "GE2010-results-flatfile-website.xls",
@@ -37,7 +32,12 @@ class UK2010Results:
                 "GE2010-results-flatfile-website.xls",
             ),
         ]
-        for url, filename in sources:
+
+    def retrieve(self):
+        """Retrieve results data for the United Kingdom's 2010 General Election."""
+        target = self.directory / "raw"
+        os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
+        for url, filename in self.sources:
             response = requests.get(url + filename)
             if response.status_code == 200:
                 with open(target / filename, "wb") as f:
