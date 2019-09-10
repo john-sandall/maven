@@ -9,3 +9,5 @@ notes-maven*
 .vscode
 *.egg
 .eggs
+
+ignoreme_*
