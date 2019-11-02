@@ -28,8 +28,6 @@ class UK2010Results:
         target = self.directory / 'raw'
         os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
         sources = [
-            ('http://www.electoralcommission.org.uk/__data/assets/excel_doc/0003/105726/',
-             'GE2010-results-flatfile-website.xls'),
             ('https://s3-eu-west-1.amazonaws.com/sixfifty/',
              'GE2010-results-flatfile-website.xls')
         ]
