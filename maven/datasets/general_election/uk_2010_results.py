@@ -62,9 +62,9 @@ class UK2010Results:
         results = results[-blank_rows].copy()
 
         # Set NA vals to zero (NA => zero votes for that party within the constituency)
-        for party_vote_result in results.columns[6:]:  # first 5 cols are not party votes
+        for party_vote_result in results.columns[6:]:  # first 6 cols are not party votes
             results[party_vote_result] = results[party_vote_result].fillna(0)
-        assert results.shape == (650, 144)  # missing rows/cols impacts further analysis
+        assert results.shape == (650, 144)
 
         # Save this for convenience
         results_full = results.copy()

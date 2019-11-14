@@ -6,8 +6,8 @@ Usage:
     > maven.get('general-election/UK/2015/model', data_directory='./data/')
 """
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pandas as pd
 
@@ -212,7 +212,6 @@ class UK2015Model:
         for geo in ['UK', 'Scotland', 'Wales', 'NI', 'London', 'England_not_london']:
             for party in ['con', 'lab', 'ld', 'ukip', 'grn', 'snp', 'pc']:
                 if party not in polls_17[geo]:
-                    # print('Adding {} to {}'.format(party, geo))
                     polls_17[geo][party] = 0
 
         # Fix PC (Plaid Cymru) for UK
@@ -247,7 +246,7 @@ class UK2015Model:
         # polls_17_csv.to_csv(polls_data_dir / 'final_polls_2017.csv', index=True)
 
         #############################
-        # Calculate uplifts ('swing')
+        # Calculate uplifts ("swing")
         #############################
 
         parties_15 = ['con', 'lab', 'ld', 'ukip', 'grn', 'other']
@@ -411,10 +410,7 @@ class UK2015Model:
 
         # swing_forecast_win
         swing_forecast_win = ge_2010[['Press Association Reference', 'win_15']]
-        swing_forecast_win.columns = [
-            'Press Association Reference',
-            'swing_forecast_win',
-        ]
+        swing_forecast_win.columns = ['Press Association Reference', 'swing_forecast_win']
         df = pd.merge(left=df, right=swing_forecast_win, on=['Press Association Reference'])
 
         # actual_win_now
@@ -525,10 +521,7 @@ class UK2015Model:
 
         # swing_forecast_win
         swing_forecast_win = ge_2015[['Press Association ID Number', 'win_17']]
-        swing_forecast_win.columns = [
-            'Press Association ID Number',
-            'swing_forecast_win',
-        ]
+        swing_forecast_win.columns = ['Press Association ID Number', 'swing_forecast_win']
         df15 = pd.merge(left=df15, right=swing_forecast_win, on=['Press Association ID Number'])
 
         # dummy party
