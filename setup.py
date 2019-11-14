@@ -20,7 +20,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=['pandas', 'requests', 'xlrd',],
-    python_requires='3.7.*',
+    python_requires='==3.7.*',
     setup_requires=['pytest-runner'],
     test_suite='tests',
     tests_require=['pytest'],
