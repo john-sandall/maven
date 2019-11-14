@@ -33,11 +33,11 @@ class UK2010Results:
         for url, filename in self.sources:
             response = requests.get(url + filename)
             if response.status_code == 200:
-                with open(target / filename, 'wb') as f:
-                    f.write(response.content)
+                with open(target / filename, 'wb') as file:
+                    file.write(response.content)
                 print(f'Successfully downloaded raw data into {target.resolve()}')
                 return
-            warnings.warn('Received status 404 when trying to retrieve {}{}'.format(url, filename))
+            warnings.warn(f'Received status 404 when trying to retrieve {url}{filename}')
         raise RuntimeError('Unable to download UK 2010 General Election results data.')
 
     def process(self):
@@ -54,37 +54,26 @@ class UK2010Results:
         ##########################
         print(f'Read and clean {filename}')
 
-        # Import general election results from the correct sheet, there are two
-        # sheets, the other being 'Party Abbreviations'
+        # Import general election results
         results = pd.read_excel(self.directory / 'raw' / filename, sheet_name='Party vote share')
 
-        # Remove rows where Constituency Name is blank - in the spreadsheet
-        # this is only one row, the last row of the sheet
+        # Remove rows where Constituency Name is blank (one row only - the last row of the sheet)
         blank_rows = results['Constituency Name'].isnull()
         results = results[-blank_rows].copy()
 
-        # NA represents zero votes for that party within that consituency, so
-        # set them to zero.
-        results.to_csv('d2.csv')
-        for party_vote_result in results.columns[6:]:  # col 6 has vote counts
+        # Set NA vals to zero (NA => zero votes for that party within the constituency)
+        for party_vote_result in results.columns[6:]:  # first 5 cols are not party votes
             results[party_vote_result] = results[party_vote_result].fillna(0)
-
-        # missing rows/columns will impact further analysis
-        assert results.shape == (650, 144), (
-            f'Dimensions of data are incorrect, expect 650 rows and 144 columns. '
-            f'Data has {results.shape[0]} rows, {results.shape[1]} cols'
-        )
+        assert results.shape == (650, 144)  # missing rows/cols impacts further analysis
 
         # Save this for convenience
         results_full = results.copy()
-        results_full.to_csv('./test-full-results.csv')
 
         ############################
         # ADDITIONAL TRANSFORMATIONS
         ############################
 
-        # Filter to metadata cols + parties of interest. The original data has ~139 parties, we want to filter
-        # this down for future analysis.
+        # Filter to metadata cols + parties of interest (from ~139 parties to ~11).
         parties_lookup = {
             'Con': 'con',
             'Lab': 'lab',
@@ -102,67 +91,52 @@ class UK2010Results:
             # Other
             'Other': 'other',
         }
-
-        other_parties = list(
-            set(results.columns)
-            - set(results.columns[:6])  # col 6 has vote counts
-            - set(parties_lookup.keys())
-        )
+        other_parties = list(set(results.columns) - set(results.columns[:6]) - set(parties_lookup.keys()))
 
         results['Other'] = results.loc[:, other_parties].sum(axis=1)
         results = results.loc[:, list(results.columns[:6]) + list(parties_lookup.keys())]
 
-        # Rename parties using the defined values in parties_lookup, ignore
-        # columns relating to Press Association Reference, Constituency Name,
-        # Region, Election Year, and Electorate.
-        #
+        # Rename parties (if in parties_lookup, else ignore)
+        # TODO: Cleaner with .rename()
         results.columns = [parties_lookup[x] if x in parties_lookup else x for x in results.columns]
 
-        # Calculate constituency level vote share proportion (pc=proportion count)
+        # Calculate constituency level vote share % (pc = percent)
         for party in parties_lookup.values():
             results[party + '_pc'] = results[party] / results['Votes']
 
         # Create PANO -> geo lookup
-        # Store regions in England as either London or not-London, rather than
-        # having East/West Midlands and such.
-        uk_regions_to_NI_scotland_london_and_not_london = {
-            'East Midlands': 'England_not_london',
-            'Eastern': 'England_not_london',
-            'London': 'London',
-            'North East': 'England_not_london',
-            'North West': 'England_not_london',
-            'Northern Ireland': 'NI',
-            'Scotland': 'Scotland',
-            'South East': 'England_not_london',
-            'South West': 'England_not_london',
-            'Wales': 'Wales',
-            'West Midlands': 'England_not_london',
-            'Yorkshire and the Humber': 'England_not_london',
-        }
-        results['geo'] = results.Region.map(uk_regions_to_NI_scotland_london_and_not_london)
-
+        results['geo'] = results.Region.map(
+            {
+                'East Midlands': 'England_not_london',
+                'Eastern': 'England_not_london',
+                'London': 'London',
+                'North East': 'England_not_london',
+                'North West': 'England_not_london',
+                'Northern Ireland': 'NI',
+                'Scotland': 'Scotland',
+                'South East': 'England_not_london',
+                'South West': 'England_not_london',
+                'Wales': 'Wales',
+                'West Midlands': 'England_not_london',
+                'Yorkshire and the Humber': 'England_not_london',
+            }
+        )
         assert results.loc[237.0, 'geo'] == 'London'
 
         # Who won?
         def winner(row):
-            """
-            given a row representing outome for a consituency sort and return
-            the winning party
-            """
-            winning_party = row[6:].sort_values(ascending=False).index[0]
+            """Return winning party for given row of constituency outcomes."""
+            # Need to remove Other as this represents multiple parties so (usually) not the actual FPTP winner.
+            all_parties = set(results_full.columns[6:]) - set(['Other'])
+            winning_party = row[all_parties].sort_values(ascending=False).index[0]
             if winning_party in parties_lookup.keys():
                 winning_party = parties_lookup[winning_party]
             elif winning_party == 'Speaker':
                 winning_party = 'other'
-            return winning_party.lower()
+            return winning_party
 
-        results_full.to_csv('dfull.csv')
         results['winner'] = results_full.apply(winner, axis=1)
-        results.to_csv('d1.csv')
-        # Check Conservative won 306 seats in 2010.
-        assert (
-            results.winner.value_counts()[0] == 306
-        ), 'Conservative should have won 306 seats in 2010, data shows otherwise'
+        assert results.winner.value_counts()[0] == 306  # Check Conservatives won 306 seats in 2010
 
         # EXPORT
         print(f'Exporting dataset to {processed_results_location.resolve()}')
