@@ -1,4 +1,4 @@
-'''
+"""
 Results data for the United Kingdom's 2010 General Election.
 
 Sources:
@@ -8,7 +8,7 @@ Sources:
 Usage:
     > import maven
     > maven.get('general-election/UK/2010/results', data_directory='./data/')
-'''
+"""
 import os
 import warnings
 from pathlib import Path
@@ -18,7 +18,7 @@ import requests
 
 
 class UK2010Results:
-    '''Handles results data for the United Kingdom's 2010 General Election.'''
+    """Handles results data for the United Kingdom's 2010 General Election."""
 
     def __init__(self, directory=Path('data/general-election/UK/2010/results')):
         self.directory = Path(directory)
@@ -87,7 +87,7 @@ class UK2010Results:
         }
 
     def retrieve(self):
-        '''Retrieve results data for the United Kingdom's 2010 General Election.'''
+        """Retrieve results data for the United Kingdom's 2010 General Election."""
         os.makedirs(
             self.raw_data_dir, exist_ok=True
         )  # create directory if it doesn't exist
@@ -106,7 +106,7 @@ class UK2010Results:
         raise RuntimeError('Unable to download UK 2010 General Election results data.')
 
     def process(self):
-        '''Process results data for the United Kingdom's 2010 General Election.'''
+        """Process results data for the United Kingdom's 2010 General Election."""
         os.makedirs(
             self.directory / 'processed', exist_ok=True
         )  # create directory if it doesn't exist
@@ -186,10 +186,10 @@ class UK2010Results:
 
         # Who won?
         def winner(row):
-            '''
+            """
             given a row representing outome for a consituency sort and return
             the winning party
-            '''
+            """
             winning_party = (
                 row[self.first_col_with_party_vote_info :]
                 .sort_values(ascending=False)

@@ -1,4 +1,4 @@
-'''
+"""
 Results data for the United Kingdom's 2015 General Election.
 
 Source: http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/2015-UK-general-election-data-results-WEB.zip
@@ -6,7 +6,7 @@ Source: http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/201
 Usage:
     > import maven
     > maven.get('general-election/UK/2015/results', data_directory='./data/')
-'''
+"""
 import os
 import zipfile
 from pathlib import Path
@@ -16,13 +16,13 @@ import requests
 
 
 class UK2015Results:
-    '''Handles results data for the United Kingdom's 2015 General Election.'''
+    """Handles results data for the United Kingdom's 2015 General Election."""
 
     def __init__(self, directory=Path('data/general-election/UK/2015/results')):
         self.directory = Path(directory)
 
     def retrieve(self):
-        '''Retrieve results data for the United Kingdom's 2015 General Election.'''
+        """Retrieve results data for the United Kingdom's 2015 General Election."""
         url = 'https://www.electoralcommission.org.uk/sites/default/files/2019-08/'
         filename = '2015-UK-general-election-data-results%20-%20CSV.zip'
         target = self.directory / 'raw'
@@ -41,7 +41,7 @@ class UK2015Results:
         os.remove(target / filename)
 
     def process(self):
-        '''Process results data for the United Kingdom's 2015 General Election.'''
+        """Process results data for the United Kingdom's 2015 General Election."""
         processed_results_filename = 'general_election-uk-2015-results.csv'
         processed_results_full_filename = 'general_election-uk-2015-results-full.csv'
         processed_results_location = (

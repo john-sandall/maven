@@ -1,10 +1,10 @@
-'''
+"""
 Model-ready dataset for the United Kingdom's 2015 General Election.
 
 Usage:
     > import maven
     > maven.get('general-election/UK/2015/model', data_directory='./data/')
-'''
+"""
 import os
 from pathlib import Path
 import shutil
@@ -15,14 +15,14 @@ import maven
 
 
 class UK2015Model:
-    '''Generates model-ready data for the United Kingdom's 2015 General Election.'''
+    """Generates model-ready data for the United Kingdom's 2015 General Election."""
 
     def __init__(self, directory=Path('data/general-election/UK/2015/model')):
         self.directory = Path(directory)
 
     def retrieve(self):
-        '''Will check to see if this already exists in directory tree, otherwise puts the
-           datasets there by executing the necessary code from within this repo.'''
+        """Will check to see if this already exists in directory tree, otherwise puts the
+           datasets there by executing the necessary code from within this repo."""
         destination_target = self.directory / 'raw'
         os.makedirs(
             destination_target, exist_ok=True
@@ -80,8 +80,8 @@ class UK2015Model:
             )
 
     def process(self):
-        '''Process results data from the United Kingdom's 2010 and 2015 General Elections
-           into a single model-ready dataset for predicting the 2015 General Election.'''
+        """Process results data from the United Kingdom's 2010 and 2015 General Elections
+           into a single model-ready dataset for predicting the 2015 General Election."""
         processed_directory = self.directory / 'processed'
         os.makedirs(
             processed_directory, exist_ok=True

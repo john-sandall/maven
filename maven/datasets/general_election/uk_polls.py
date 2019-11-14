@@ -1,4 +1,4 @@
-'''
+"""
 General Election polling data for the United Kingdom.
 
 Sources:
@@ -12,7 +12,7 @@ Sources:
 Usage:
     > import maven
     > maven.get('general-election/UK/polls', data_directory='./data/')
-'''
+"""
 import os
 import warnings
 from pathlib import Path
@@ -21,13 +21,13 @@ import requests
 
 
 class UKPolls:
-    '''Handles General Election polling data for the United Kingdom.'''
+    """Handles General Election polling data for the United Kingdom."""
 
     def __init__(self, directory=Path('data/general-election/UK/polls')):
         self.directory = Path(directory)
 
     def retrieve(self):
-        '''Retrieve General Election polling data for the United Kingdom.'''
+        """Retrieve General Election polling data for the United Kingdom."""
         target_directory = self.directory / 'processed'
         os.makedirs(
             target_directory, exist_ok=True

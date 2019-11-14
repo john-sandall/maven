@@ -1,4 +1,4 @@
-'''
+"""
 Running tests in development:
     $ cd /path/to/repo
     $ python -m pytest
@@ -6,7 +6,7 @@ Running tests in development:
 Running tests against installed version (either `pip install .` or `pip install maven`):
     $ cd /path/to/repo
     $ pytest
-'''
+"""
 
 import pytest
 
