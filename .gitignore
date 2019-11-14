@@ -6,9 +6,6 @@ dist/
 maven.egg-info/
 
 *.pyc
-notes-maven*
-.vscode
-*.egg
-.eggs
 
-ignoreme_*
+# IDE ignores
+.vscode
