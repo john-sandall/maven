@@ -44,15 +44,9 @@ class UK2015Results:
         """Process results data for the United Kingdom's 2015 General Election."""
         processed_results_filename = 'general_election-uk-2015-results.csv'
         processed_results_full_filename = 'general_election-uk-2015-results-full.csv'
-        processed_results_location = (
-            self.directory / 'processed' / processed_results_filename
-        )
-        processed_results_full_location = (
-            self.directory / 'processed' / processed_results_full_filename
-        )
-        os.makedirs(
-            self.directory / 'processed', exist_ok=True
-        )  # create directory if it doesn't exist
+        processed_results_location = self.directory / 'processed' / processed_results_filename
+        processed_results_full_location = self.directory / 'processed' / processed_results_full_filename
+        os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
         # TODO: Refactor these sections into functions to make it easier to read.
 
@@ -68,9 +62,7 @@ class UK2015Results:
         del results['Unnamed: 9']
 
         # Fix bad column name (' Total number of valid votes counted ' to 'Valid Votes')
-        results.columns = (
-            list(results.columns[:8]) + ['Valid Votes'] + list(results.columns[9:])
-        )
+        results.columns = list(results.columns[:8]) + ['Valid Votes'] + list(results.columns[9:])
 
         # Remove rows where Constituency Name is blank
         blank_rows = results['Constituency Name'].isnull()
@@ -93,9 +85,7 @@ class UK2015Results:
         print('Read and clean CONSTITUENCY.csv')
 
         # Import constituency data
-        constituency = pd.read_csv(
-            self.directory / 'raw' / 'CONSTITUENCY.csv', encoding='latin1'
-        )
+        constituency = pd.read_csv(self.directory / 'raw' / 'CONSTITUENCY.csv', encoding='latin1')
 
         # Remove rows where Constituency Name is blank
         blank_rows = constituency['Constituency Name'].isnull()
@@ -114,16 +104,9 @@ class UK2015Results:
 
         # Pre-merge checks
         match_col = 'Constituency ID'
-        assert (
-            len(set(constituency[match_col]).intersection(set(results[match_col])))
-            == 650
-        )
-        assert (
-            len(set(constituency[match_col]).difference(set(results[match_col]))) == 0
-        )
-        assert (
-            len(set(results[match_col]).difference(set(constituency[match_col]))) == 0
-        )
+        assert len(set(constituency[match_col]).intersection(set(results[match_col]))) == 650
+        assert len(set(constituency[match_col]).difference(set(results[match_col]))) == 0
+        assert len(set(results[match_col]).difference(set(constituency[match_col]))) == 0
 
         # Merge on Constituency ID
         results = pd.merge(
@@ -169,34 +152,21 @@ class UK2015Results:
             'PC': 'pc',
             'Other': 'other',
         }
-        other_parties = list(
-            set(results.columns)
-            - set(results.columns[:11])
-            - set(parties_lookup.keys())
-        )
+        other_parties = list(set(results.columns) - set(results.columns[:11]) - set(parties_lookup.keys()))
         results['Other'] = results.loc[:, other_parties].sum(axis=1)
-        results = results.loc[
-            :, list(results.columns[:11]) + list(parties_lookup.keys())
-        ]
+        results = results.loc[:, list(results.columns[:11]) + list(parties_lookup.keys())]
         # Rename parties
-        results.columns = [
-            parties_lookup[x] if x in parties_lookup else x for x in results.columns
-        ]
+        results.columns = [parties_lookup[x] if x in parties_lookup else x for x in results.columns]
 
         # Calculate constituency level vote share
         for party in parties_lookup.values():
             results[party + '_pc'] = results[party] / results['Valid Votes']
 
         # Create PANO -> geo lookup
-        geo_lookup = {
-            x[1][0]: x[1][1]
-            for x in results[['Press Association ID Number', 'Country']].iterrows()
-        }
+        geo_lookup = {x[1][0]: x[1][1] for x in results[['Press Association ID Number', 'Country']].iterrows()}
         assert geo_lookup[14.0] == 'Northern Ireland'
         # Add London boroughs
-        london_panos = results[results.County == 'London'][
-            'Press Association ID Number'
-        ].values
+        london_panos = results[results.County == 'London']['Press Association ID Number'].values
         for pano in london_panos:
             geo_lookup[pano] = 'London'
         assert geo_lookup[237.0] == 'London'
@@ -210,14 +180,8 @@ class UK2015Results:
 
         # Calculate geo-level vote share
         # TODO: Do we use this?
-        results_by_geo = (
-            results.loc[:, ['Valid Votes', 'geo'] + list(parties_lookup.values())]
-            .groupby('geo')
-            .sum()
-        )
-        results_by_geo_voteshare = results_by_geo.div(
-            results_by_geo['Valid Votes'], axis=0
-        )
+        results_by_geo = results.loc[:, ['Valid Votes', 'geo'] + list(parties_lookup.values())].groupby('geo').sum()
+        results_by_geo_voteshare = results_by_geo.div(results_by_geo['Valid Votes'], axis=0)
         del results_by_geo_voteshare['Valid Votes']
 
         # Who won?
@@ -232,12 +196,7 @@ class UK2015Results:
 
         results['winner'] = results_full.apply(winner, axis=1)
         # Check Conservatives won 330 seats in 2015.
-        assert (
-            results.groupby('winner')
-            .count()['Constituency Name']
-            .sort_values(ascending=False)[0]
-            == 330
-        )
+        assert results.groupby('winner').count()['Constituency Name'].sort_values(ascending=False)[0] == 330
 
         # EXPORT
         print(f'Exporting dataset to {processed_results_location.resolve()}')
