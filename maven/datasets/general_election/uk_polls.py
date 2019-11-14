@@ -37,7 +37,7 @@ class UKPolls:
             ('polls_london.csv', 'general_election-london-polls.csv'),
             ('polls_scotland.csv', 'general_election-scotland-polls.csv'),
             ('polls_wales.csv', 'general_election-wales-polls.csv'),
-            ('polls_ni.csv', 'general_election-ni-polls.csv')
+            ('polls_ni.csv', 'general_election-ni-polls.csv'),
         ]
         for source_filename, target_filename in files:
             response = requests.get(base_url + source_filename)

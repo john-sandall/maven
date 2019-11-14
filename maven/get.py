@@ -28,9 +28,9 @@ def get(name, data_directory=Path('.'), retrieve=True, process=True):
         'general-election/UK/2015/model': general_election.UK2015Model,
         'general-election/UK/2015/results': general_election.UK2015Results,
         'general-election/UK/polls': general_election.UKPolls,
-        }
+    }
     if name not in mapper:
-        raise KeyError(f'"{name}" not found in datasets.')
+        raise KeyError(f"'{name}' not found in datasets.")
 
     if isinstance(data_directory, str):
         data_directory = Path(data_directory)

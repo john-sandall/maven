@@ -6,8 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
-### Added
-- Tests added to setup.py.
+- Code refactor & cleanup.
 
 ## [0.0.8] - 2019-11-14
 ### Fixes
@@ -15,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed URL to EC's 2015 GE results.
 
 ## [0.0.7] - 2019-11-14
+### Added
+- Tests added to setup.py.
 ### Changed
 - Switched to using [pip-tools](https://github.com/jazzband/pip-tools) instead of Pipenv for generating requirements.txt & locking dependencies.
 

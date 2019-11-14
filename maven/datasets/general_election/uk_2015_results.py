@@ -44,8 +44,8 @@ class UK2015Results:
         """Process results data for the United Kingdom's 2015 General Election."""
         processed_results_filename = 'general_election-uk-2015-results.csv'
         processed_results_full_filename = 'general_election-uk-2015-results-full.csv'
-        processed_results_location = (self.directory / 'processed' / processed_results_filename)
-        processed_results_full_location = (self.directory / 'processed' / processed_results_full_filename)
+        processed_results_location = self.directory / 'processed' / processed_results_filename
+        processed_results_full_location = self.directory / 'processed' / processed_results_full_filename
         os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
         # TODO: Refactor these sections into functions to make it easier to read.
@@ -70,7 +70,7 @@ class UK2015Results:
 
         # Remove commas & coerce Electorate and Total number of valid votes counted
         for col in ['Electorate', 'Valid Votes']:
-            results[col] = results[col].apply(lambda x: float(x.replace(",", "")))
+            results[col] = results[col].apply(lambda x: float(x.replace(',', '')))
 
         # Set NA vals to zero
         for col in results.columns[9:]:
@@ -113,13 +113,22 @@ class UK2015Results:
             left=results,
             right=constituency[['Constituency ID', 'Region ID', 'County']],
             how='left',
-            on='Constituency ID'
+            on='Constituency ID',
         )
-        column_order = ['Press Association ID Number', 'Constituency ID', 'Constituency Name', 'Constituency Type',
-                        'County', 'Region ID', 'Region', 'Country', 'Election Year', 'Electorate',
-                        'Valid Votes'] + list(results.columns[9:146])
+        column_order = [
+            'Press Association ID Number',
+            'Constituency ID',
+            'Constituency Name',
+            'Constituency Type',
+            'County',
+            'Region ID',
+            'Region',
+            'Country',
+            'Election Year',
+            'Electorate',
+            'Valid Votes',
+        ] + list(results.columns[9:146])
         results = results[column_order].copy()
-
 
         ############################
         # ADDITIONAL TRANSFORMATIONS
@@ -141,7 +150,7 @@ class UK2015Results:
             'Green': 'grn',
             'SNP': 'snp',
             'PC': 'pc',
-            'Other': 'other'
+            'Other': 'other',
         }
         other_parties = list(set(results.columns) - set(results.columns[:11]) - set(parties_lookup.keys()))
         results['Other'] = results.loc[:, other_parties].sum(axis=1)
