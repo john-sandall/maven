@@ -25,10 +25,6 @@ class UK2010Results:
 
         self.sources = [
             (
-                "http://www.electoralcommission.org.uk/__data/assets/excel_doc/0003/105726/",
-                "GE2010-results-flatfile-website.xls",
-            ),
-            (
                 "https://s3-eu-west-1.amazonaws.com/sixfifty/",
                 "GE2010-results-flatfile-website.xls",
             ),
@@ -192,7 +188,7 @@ class UK2010Results:
         def winner(row):
             """
             given a row representing outome for a consituency sort and return
-            the winning party 
+            the winning party
             """
             winning_party = (
                 row[self.first_col_with_party_vote_info :]

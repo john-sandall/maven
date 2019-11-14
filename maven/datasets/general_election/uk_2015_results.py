@@ -23,9 +23,9 @@ class UK2015Results:
 
     def retrieve(self):
         """Retrieve results data for the United Kingdom's 2015 General Election."""
-        url = "http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/"
-        filename = "2015-UK-general-election-data-results-WEB.zip"
-        target = self.directory / "raw"
+        url = 'https://www.electoralcommission.org.uk/sites/default/files/2019-08/'
+        filename = '2015-UK-general-election-data-results%20-%20CSV.zip'
+        target = self.directory / 'raw'
         os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
 
         print(f"Downloading into {target.resolve()}")
