@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='maven',
-    version='0.0.6',
+    version='0.0.7',
     description=("Maven's goal is to reduce the time data scientists spend on data cleaning and preparation "
                  "by providing easy access to open datasets in both raw and processed formats."),
     long_description=long_description,
@@ -22,6 +22,7 @@ setuptools.setup(
         'requests',
         'xlrd',
     ],
+    python_requires="==3.7.*",
     setup_requires=['pytest-runner'],
     test_suite='tests',
     tests_require=['pytest'],
