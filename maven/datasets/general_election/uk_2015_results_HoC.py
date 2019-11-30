@@ -32,6 +32,3 @@ class UK2015ResultsHoC:
         with open(target / filename, 'wb') as f:
             response = requests.get(url + filename)
             f.write(response.content)
-
-        print('Cleaning up')
-        os.remove(target / filename)
