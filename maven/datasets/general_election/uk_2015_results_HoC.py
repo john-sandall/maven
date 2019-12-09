@@ -8,11 +8,11 @@ Usage:
     > maven.get('general-election/UK/2015/hoc_results', data_directory='./data/')
 """
 import os
-import zipfile
 from pathlib import Path
 
 import pandas as pd
 import requests
+import numpy as np
 
 
 class UK2015ResultsHoC:
@@ -23,9 +23,8 @@ class UK2015ResultsHoC:
 
     def retrieve(self):
         """Retrieve results data for the United Kingdom's 2015 General Election."""
-        url =  "http://researchbriefings.files.parliament.uk/documents/CBP-7186"
+        url = "http://researchbriefings.files.parliament.uk/documents/CBP-7186"
         filename = "hocl-ge2015-results-summary.csv"
-        # filename = 'hocl-ge2015-results-summary.csv'
         target = self.directory / 'raw'
         os.makedirs(target, exist_ok=True)  # create directory if it doesn't exist
 
@@ -55,8 +54,10 @@ class UK2015ResultsHoC:
             'country_name': 'Country',
             'electorate': 'Electorate',
             'valid_votes': 'Valid Votes',
-            'first_party': 'Winner'
+            'first_party': 'winner'
         }, axis=1)
+        results["Election Year"] = 2015
+        results["Press Association ID Number"] = np.nan
 
         # Add minor parties to "other", then drop 
         results['other'] += results[minor_parties].sum(axis=1)
@@ -80,8 +81,39 @@ class UK2015ResultsHoC:
 
         results['geo'] = results.apply(map_geo, axis=1)
 
+        results = results[[
+            "Press Association ID Number",
+            "Constituency ID",
+            "Constituency Name",
+            "Constituency Type",
+            "County",
+            # "Region ID",
+            "Region",
+            "Country",
+            "Election Year",
+            "Electorate",
+            "Valid Votes",
+            "con",
+            "lab",
+            "ld",
+            "ukip",
+            # "grn",
+            "snp",
+            "pc",
+            "other",
+            "con_pc",
+            "lab_pc",
+            "ld_pc",
+            "ukip_pc",
+            # "grn_pc",
+            "snp_pc",
+            "pc_pc",
+            # "other_pc",
+            "winner",
+            "geo"
+        ]]
 
         os.makedirs(self.directory / 'processed', exist_ok=True)  # create directory if it doesn't exist
 
-        assert results.groupby('Winner').count()['Constituency Name'].sort_values(ascending=False)[0] == 330
+        assert results.groupby('winner').count()['Constituency Name'].sort_values(ascending=False)[0] == 330
         results.to_csv(processed_results_location, index=False)
