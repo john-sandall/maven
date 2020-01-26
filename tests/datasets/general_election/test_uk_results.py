@@ -18,7 +18,7 @@ import maven
 def check_uk_hoc_results_data(identifier, processed_filename):
     maven.get(identifier, data_directory="./data/")
     df = pd.read_csv(Path("./data") / identifier / "processed" / processed_filename)
-    assert df.shape == (8450, 10)
+    assert df.shape == (8450, 11)
     assert df.columns.tolist() == [
         "ons_id",
         "constituency",
@@ -26,9 +26,10 @@ def check_uk_hoc_results_data(identifier, processed_filename):
         "region",
         "country",
         "electorate",
+        "total_votes",
+        "turnout",
         "party",
         "votes",
-        "total_votes",
         "voteshare",
     ]
 
