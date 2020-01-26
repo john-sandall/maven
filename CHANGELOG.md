@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
-- Code refactor & cleanup.
+
+## [0.0.10] - 2020-01-26
+### Added
+- Raw datasets are now cached on download, and processed datasets cached after processing, and always checked against MD5 for integrity.
+- Tests now exist for utils.py
 
 ## [0.0.9] - 2020-01-26
 ### Added
