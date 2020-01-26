@@ -2,7 +2,11 @@
 Various helper functions.
 """
 
+import hashlib
+import warnings
+
 import pandas as pd
+import requests
 
 
 def sanitise(x):
@@ -79,3 +83,49 @@ def process_hoc_sheet(input_file, data_dir, sheet_name):
     ].copy()
 
     return results_long
+
+
+def calculate_md5_checksum(filename):
+    """
+    Calculate the checksum of the file, exactly same as md5-sum linux util.
+    Code from https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/downloader.py
+    """
+    hash_md5 = hashlib.md5()
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def fetch_url(url, filename, target_dir):
+    """Download filename from url into target_dir."""
+    response = requests.get(url + filename)
+    if response.status_code != 200:
+        warnings.warn(f"Received status {response.status_code} when trying to retrieve {url}{filename}")
+    # Save to file
+    with open(target_dir / filename, "wb") as f:
+        f.write(response.content)
+    print(f"Successfully downloaded {filename} into {target_dir.resolve()}")
+    return target_dir / filename
+
+
+def retrieve_from_cache_if_exists(
+    filename, target_dir, processing_fn, md5_checksum=None, caching_enabled=True, verbose=False
+):
+    """Retrieve filename from target_dir if it exists, otherwise execute processing_fn.
+
+    Raises a warning if the retrieved/processed file's checksum doesn't match the expected MD5.
+    """
+    if caching_enabled and (target_dir / filename).exists():
+        # Check if it's already in target_dir.
+        print(f"Cached file {filename} is already in {target_dir.resolve()}")
+    else:
+        # Either caching disabled or file not there yet.
+        processing_fn()
+
+    # File should now be there. Let's check checksums.
+    downloaded_file_md5_checksum = calculate_md5_checksum(target_dir / filename)
+    if verbose:
+        print(f"Checksum for {filename}: {downloaded_file_md5_checksum}")
+    if md5_checksum and downloaded_file_md5_checksum != md5_checksum:
+        warnings.warn(f"MD5 checksum doesn't match for {filename}")
