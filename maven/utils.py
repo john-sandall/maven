@@ -2,7 +2,10 @@
 Various helper functions.
 """
 
+import warnings
+
 import pandas as pd
+import requests
 
 
 def sanitise(x):
@@ -79,3 +82,13 @@ def process_hoc_sheet(input_file, data_dir, sheet_name):
     ].copy()
 
     return results_long
+
+
+def download_file(url, filename, target_dir):
+    response = requests.get(url + filename)
+    if response.status_code == 200:
+        with open(target_dir / filename, "wb") as file:
+            file.write(response.content)
+        print(f"Successfully downloaded {filename} into {target_dir.resolve()}")
+    else:
+        warnings.warn(f"Received status 404 when trying to retrieve {url}{filename}")
