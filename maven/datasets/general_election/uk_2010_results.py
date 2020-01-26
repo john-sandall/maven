@@ -44,9 +44,8 @@ class UK2010Results(UKResults):
         processed_results_location = self.directory / "processed" / processed_results_filename
         os.makedirs(self.directory / "processed", exist_ok=True)  # create directory if it doesn't exist
 
-        results = utils.process_hoc_sheet(
-            input_file=filename, output_file=processed_results_filename, data_dir=self.directory, sheet_name="2010"
-        )
+        # Process
+        results = utils.process_hoc_sheet(input_file=filename, data_dir=self.directory, sheet_name="2010")
 
         # Export
         print(f"Exporting dataset to {processed_results_location.resolve()}")

@@ -9,7 +9,7 @@ def sanitise(x):
     return x.lower().replace(" ", "_")
 
 
-def process_hoc_sheet(input_file, output_file, data_dir, sheet_name):
+def process_hoc_sheet(input_file, data_dir, sheet_name):
     # Import general election results
     print(f"Read and clean {input_file}")
     parties = ["Con", "LD", "Lab", "UKIP", "Grn", "SNP", "PC", "DUP", "SF", "SDLP", "UUP", "APNI", "Other"]
