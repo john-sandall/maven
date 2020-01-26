@@ -59,5 +59,23 @@ def process_hoc_sheet(input_file, data_dir, sheet_name):
     # Re-add total_votes & voteshare
     results_long["total_votes"] = results_long.ons_id.map(results_long.groupby("ons_id").votes.sum().astype(int))
     results_long["voteshare"] = results_long["votes"] / results_long["total_votes"]
+    results_long["turnout"] = results_long["total_votes"] / results_long["electorate"]
+
+    # Reorder cols for export
+    results_long = results_long[
+        [
+            "ons_id",
+            "constituency",
+            "county",
+            "region",
+            "country",
+            "electorate",
+            "total_votes",
+            "turnout",
+            "party",
+            "votes",
+            "voteshare",
+        ]
+    ].copy()
 
     return results_long

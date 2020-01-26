@@ -8,6 +8,7 @@ Usage:
 
 Sources:
     - http://researchbriefings.files.parliament.uk/documents/CBP-8647/1918-2017election_results.csv
+        - From https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647
 
 Deprecated sources:
     - http://www.electoralcommission.org.uk/__data/assets/file/0004/191650/2015-UK-general-election-data-results-WEB.zip

@@ -8,6 +8,7 @@ Usage:
 
 Sources:
     - http://researchbriefings.files.parliament.uk/documents/CBP-8647/1918-2017election_results.csv
+        - From https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647
 
 Other sources:
     - https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-7186
