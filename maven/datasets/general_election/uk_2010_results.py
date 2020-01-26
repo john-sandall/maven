@@ -14,7 +14,7 @@ Deprecated sources:
     - https://s3-eu-west-1.amazonaws.com/sixfifty/GE2010-results-flatfile-website.xls
 
 Notes:
-    - GE2010-results-flatfile-website.xls is currently the only known data source with a full list of votes for ALL parties.
+    - GE2010-results-flatfile-website.xls is currently the only known source with a full list of votes for ALL parties.
 """
 
 import os

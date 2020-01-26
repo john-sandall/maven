@@ -27,7 +27,6 @@ def get(name, data_directory=Path("."), retrieve=True, process=True):
         "general-election/UK/2010/results": general_election.UK2010Results,
         "general-election/UK/2015/model": general_election.UK2015Model,
         "general-election/UK/2015/results": general_election.UK2015Results,
-        "general-election/UK/2015/results_HoC": general_election.UK2015ResultsHoC,
         "general-election/UK/2017/results_HoC": general_election.UK2017ResultsHoC,
         "general-election/UK/polls": general_election.UKPolls,
     }
