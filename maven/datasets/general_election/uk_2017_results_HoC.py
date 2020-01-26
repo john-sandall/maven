@@ -1,16 +1,16 @@
 import os
 from pathlib import Path
 
-import feather
 import numpy as np
 import pandas as pd
 import requests
+
+import feather
 
 csv_filename = "HoC-GE2017-constituency-results.csv"
 
 
 class UK2017ResultsHoC:
-
     def __init__(self, directory=Path("data/general-election/UK/2017/hoc_results")):
         self.directory = Path(directory)
 
@@ -29,7 +29,7 @@ class UK2017ResultsHoC:
     def process(self):
 
         processed_dir = self.directory / "processed"
-        processed_results_filename = Path('general_election-uk-2017-results.csv')
+        processed_results_filename = Path("general_election-uk-2017-results.csv")
         # GENERAL ELECTION RESULTS
         print(f"Read and clean RESULTS FOR {csv_filename}")
 
@@ -48,17 +48,17 @@ class UK2017ResultsHoC:
                 "ons_region_id": "Region ID",
                 "electorate": "Electorate",
                 "valid_votes": "Valid Votes",
-                "first_party": "winner"
+                "first_party": "winner",
             }
         )
         results["Election Year"] = 2017
         results["Press Association ID Number"] = np.nan
 
-        minor_parties = ['dup', 'sf', 'sdlp', 'uup', 'alliance']
-        major_parties = ['con', 'lab', 'ld', 'ukip', 'green', 'snp', 'pc']
+        minor_parties = ["dup", "sf", "sdlp", "uup", "alliance"]
+        major_parties = ["con", "lab", "ld", "ukip", "green", "snp", "pc"]
 
-        # Add minor parties to "other", then drop 
-        results['other'] += results[minor_parties].sum(axis=1)
+        # Add minor parties to "other", then drop
+        results["other"] += results[minor_parties].sum(axis=1)
         results = results.drop(minor_parties, axis=1)
 
         # Calculate voteshare % for major parties
@@ -67,49 +67,51 @@ class UK2017ResultsHoC:
 
         # Add 'geo' column to differentiate London from rest of England
         def map_geo(row):
-            if row.Country == 'England':
-                if row.County == 'London':
-                    return 'London'
+            if row.Country == "England":
+                if row.County == "London":
+                    return "London"
                 else:
-                    return 'England_not_london'
+                    return "England_not_london"
             elif row.Country == "Northern Ireland":
                 return "NI"
             else:
                 return row.Country
 
-        results['geo'] = results.apply(map_geo, axis=1)
+        results["geo"] = results.apply(map_geo, axis=1)
 
-        results = results[[
-            "Press Association ID Number",
-            "Constituency ID",
-            "Constituency Name",
-            "Constituency Type",
-            "County",
-            "Region ID",
-            "Region",
-            "Country",
-            "Election Year",
-            "Electorate",
-            "Valid Votes",
-            "con",
-            "lab",
-            "ld",
-            "ukip",
-            # "grn",
-            "snp",
-            "pc",
-            "other",
-            "con_pc",
-            "lab_pc",
-            "ld_pc",
-            "ukip_pc",
-            # "grn_pc",
-            "snp_pc",
-            "pc_pc",
-            # "other_pc",
-            "winner",
-            "geo"
-        ]]
+        results = results[
+            [
+                "Press Association ID Number",
+                "Constituency ID",
+                "Constituency Name",
+                "Constituency Type",
+                "County",
+                "Region ID",
+                "Region",
+                "Country",
+                "Election Year",
+                "Electorate",
+                "Valid Votes",
+                "con",
+                "lab",
+                "ld",
+                "ukip",
+                # "grn",
+                "snp",
+                "pc",
+                "other",
+                "con_pc",
+                "lab_pc",
+                "ld_pc",
+                "ukip_pc",
+                # "grn_pc",
+                "snp_pc",
+                "pc_pc",
+                # "other_pc",
+                "winner",
+                "geo",
+            ]
+        ]
 
         os.makedirs(processed_dir, exist_ok=True)  # create directory if it doesn't exist
 
