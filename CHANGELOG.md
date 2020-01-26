@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Code refactor & cleanup.
 
+## [0.0.9] - 2020-01-26
+### Added
+- UK 2017 General Election dataset (**`general-election/UK/2017/results`**).
+- Some tests (that really need caching!).
+### Changed
+- Now using data from the [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647).
+- The basic processed election results are now "long form" with less but more standardised information.
+- The full election results are (for now) no longer provided.
+- Lots of refactoring with some new base classes & utils making it faster to add new datasets.
+
 ## [0.0.8] - 2019-11-14
 ### Fixes
 - Electoral Commission [no longer hosts 2010 GE results](https://github.com/john-sandall/maven/pull/15) so use our fallback until a new primary can be found.
