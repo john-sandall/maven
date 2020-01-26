@@ -103,8 +103,8 @@ def fetch_url(url, filename, target_dir):
     if response.status_code != 200:
         warnings.warn(f"Received status {response.status_code} when trying to retrieve {url}{filename}")
     # Save to file
-    with open(target_dir / filename, "wb") as file:
-        file.write(response.content)
+    with open(target_dir / filename, "wb") as f:
+        f.write(response.content)
     print(f"Successfully downloaded {filename} into {target_dir.resolve()}")
     return target_dir / filename
 
@@ -118,7 +118,7 @@ def retrieve_from_cache_if_exists(
     """
     if caching_enabled and (target_dir / filename).exists():
         # Check if it's already in target_dir.
-        print(f"Retrieving cached file {filename} from {target_dir.resolve()}")
+        print(f"Cached file {filename} is already in {target_dir.resolve()}")
     else:
         # Either caching disabled or file not there yet.
         processing_fn()

@@ -8,7 +8,7 @@ from pathlib import Path
 from maven import utils
 
 CACHING_ENABLED = True
-VERBOSE = True
+VERBOSE = False
 
 
 class UKResults:
