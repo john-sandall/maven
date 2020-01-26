@@ -8,17 +8,15 @@ Running tests against installed version (either `pip install .` or `pip install 
     $ pytest
 """
 
-import pytest
-
 import maven
+import pytest
 
 
 def test_nonexisting_identifier():
     with pytest.raises(KeyError):
-        maven.get('this-identifier-will-never-exist')
+        maven.get("this-identifier-will-never-exist", data_directory="./data/")
 
 
-def test_process_with_retrieve():
-    # TODO: This is a useful test for now but we should actually handle this explicitly with a better error message.
-    with pytest.raises(FileNotFoundError):
-        maven.get('general-election/UK/2015/results', retrieve=False, process=True)
+def test_nothing_happens():
+    """Setting retrieve=False and process=False should do nothing."""
+    maven.get("general-election/UK/2010/results", retrieve=False, process=False)
