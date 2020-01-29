@@ -3,10 +3,14 @@ Various helper functions.
 """
 
 import hashlib
+import shutil
 import warnings
+from urllib.parse import urlparse
 
 import pandas as pd
 import requests
+
+import maven
 
 
 def sanitise(x):
@@ -97,6 +101,15 @@ def calculate_md5_checksum(filename):
     return hash_md5.hexdigest()
 
 
+def is_url(url):
+    """Source: https://stackoverflow.com/a/52455972"""
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
 def fetch_url(url, filename, target_dir):
     """Download filename from url into target_dir."""
     response = requests.get(url + filename)
@@ -107,6 +120,18 @@ def fetch_url(url, filename, target_dir):
         f.write(response.content)
     print(f"Successfully downloaded {filename} into {target_dir.resolve()}")
     return target_dir / filename
+
+
+def get_and_copy(identifier, filename, target_dir):
+    # """Run maven.get(identifier) and copy filename from identifier/processed/ data into target/."""
+    # target_dir by default is data/general-election/UK/2015/model
+    subdirectories_below = str(target_dir).count("/")
+    go_up = "/".join([".." for _ in range(subdirectories_below)])
+    data_directory = (target_dir / go_up).resolve()  # sensible guess?
+    maven.get(identifier, data_directory=data_directory)
+    source = data_directory / identifier / "processed"
+    print(f"Copying {filename} from {source} -> {target_dir}.")
+    shutil.copyfile(src=source / filename, dst=target_dir / filename)
 
 
 def retrieve_from_cache_if_exists(

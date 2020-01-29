@@ -6,44 +6,31 @@ Usage:
     > maven.get('general-election/UK/2015/model', data_directory='./data/')
 """
 import os
-import shutil
 from pathlib import Path
 
 import pandas as pd
 
-import maven
+from maven.datasets.general_election.base import Pipeline
 
 
-class UK2015Model:
+class UK2015Model(Pipeline):
     """Generates model-ready data for the United Kingdom's 2015 General Election."""
 
     def __init__(self, directory=Path("data/general-election/UK/2015/model")):
-        self.directory = Path(directory)
-
-    def retrieve(self):
-        """Will check to see if this already exists in directory tree, otherwise puts the
-           datasets there by executing the necessary code from within this repo."""
-        destination_target = self.directory / "raw"
-        os.makedirs(destination_target, exist_ok=True)  # create directory if it doesn't exist
-        data_directory = (self.directory / ".." / ".." / ".." / "..").resolve()  # sensible guess
-        data = [
-            # (identifier, type, filename)
-            ("general-election/UK/2010/results", "processed", "general_election-uk-2010-results.csv",),
-            ("general-election/UK/2010/results", "processed", "general_election-uk-2010-results-full.csv",),
-            ("general-election/UK/2015/results", "processed", "general_election-uk-2015-results.csv",),
-            ("general-election/UK/2015/results", "processed", "general_election-uk-2015-results-full.csv",),
-            ("general-election/UK/polls", "processed", "general_election-uk-polls.csv"),
-            ("general-election/UK/polls", "processed", "general_election-london-polls.csv",),
-            ("general-election/UK/polls", "processed", "general_election-scotland-polls.csv",),
-            ("general-election/UK/polls", "processed", "general_election-wales-polls.csv",),
-            ("general-election/UK/polls", "processed", "general_election-ni-polls.csv"),
+        super(UK2015Model, self).__init__(directory=directory)  # inherit base __init__ but override default directory
+        self.sources = [
+            # tuples of (url, filename, checksum)
+            ("general-election/UK/2010/results", "general_election-uk-2010-results.csv", '954a0916f5ce791ca566484ce566088d'),
+            ("general-election/UK/2015/results", "general_election-uk-2015-results.csv", '9a785cb19275e4dbc79da67eece6067f'),
+            ("general-election/UK/polls", "general_election-uk-polls.csv", '98f865803c782e1ffd0cdc4774707ae5'),
+            ("general-election/UK/polls", "general_election-london-polls.csv", '97eb4254039a6bca1a882a9afde2b067'),
+            ("general-election/UK/polls", "general_election-scotland-polls.csv", '096354c852a7c30e22a733eec133b9e3'),
+            ("general-election/UK/polls", "general_election-wales-polls.csv", '2134d55e5288bd5b12be2471f4aacab7'),
+            ("general-election/UK/polls", "general_election-ni-polls.csv", 'ea871fad0ce51c03dda09ecec0377dc6'),
         ]
-        for identifier, data_type, filename in data:
-            source_target = f"{identifier}/{data_type}/{filename}"
-            if not (data_directory / source_target).is_file():
-                print(f"Dataset {identifier} not found - retrieving now")
-                maven.get(identifier, data_directory=data_directory)
-            shutil.copyfile(src=data_directory / source_target, dst=destination_target / filename)
+        self.retrieve_all = True
+        self.verbose_name = "UK2015Model"
+        self.year = 2015
 
     def process(self):
         """Process results data from the United Kingdom's 2010 and 2015 General Elections

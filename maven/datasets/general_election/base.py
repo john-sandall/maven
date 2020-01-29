@@ -11,13 +11,13 @@ CACHING_ENABLED = True
 VERBOSE = False
 
 
-class ETL:
+class Pipeline:
     """Generic class for retrieving & processing datasets with built-in caching & MD5 checking."""
 
     def __init__(self, directory):
         self.directory = Path(directory)
         self.sources = []  # tuples of (url, filename, checksum)
-        self.retrieve_all_data = False
+        self.retrieve_all = False
         self.target = (None, None)
         self.verbose_name = ""
         self.year = None
@@ -27,18 +27,21 @@ class ETL:
         target_dir = self.directory / "raw"
         os.makedirs(target_dir, exist_ok=True)  # create directory if it doesn't exist
         for url, filename, md5_checksum in self.sources:
-            download_fn = partial(utils.fetch_url, url=url, filename=filename, target_dir=target_dir)
+            if utils.is_url(url):
+                processing_fn = partial(utils.fetch_url, url=url, filename=filename, target_dir=target_dir)
+            else:
+                processing_fn = partial(utils.get_and_copy, identifier=url, filename=filename, target_dir=target_dir)
             utils.retrieve_from_cache_if_exists(
                 filename=filename,
                 target_dir=target_dir,
-                processing_fn=download_fn,
+                processing_fn=processing_fn,
                 md5_checksum=md5_checksum,
                 caching_enabled=CACHING_ENABLED,
                 verbose=VERBOSE,
             )
-            if not self.retrieve_all_data:  # retrieve just the first dataset
+            if not self.retrieve_all:  # retrieve just the first dataset
                 return
-        if self.retrieve_all_data:  # all datasets retrieved
+        if self.retrieve_all:  # all datasets retrieved
             return
         else:  # retrieving first dataset only but all fallbacks failed
             raise RuntimeError(f"Unable to download {self.verbose_name} data.")
@@ -47,7 +50,7 @@ class ETL:
         pass
 
 
-class UKResults(ETL):
+class UKResults(Pipeline):
     """Handles results data for UK General Elections."""
 
     def process(self):
