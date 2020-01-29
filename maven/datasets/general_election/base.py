@@ -11,18 +11,19 @@ CACHING_ENABLED = True
 VERBOSE = False
 
 
-class UKResults:
-    """Handles results data for UK General Elections."""
+class ETL:
+    """Generic class for retrieving & processing datasets with built-in caching & MD5 checking."""
 
     def __init__(self, directory):
         self.directory = Path(directory)
-        self.sources = []
+        self.sources = []  # tuples of (url, filename, checksum)
+        self.retrieve_all_data = False
         self.target = (None, None)
         self.verbose_name = ""
-        self.year = ""
+        self.year = None
 
     def retrieve(self):
-        """Retrieve raw results data for a UK General Election."""
+        """Retrieve data from self.sources into self.directory / 'raw' and validate against checksum."""
         target_dir = self.directory / "raw"
         os.makedirs(target_dir, exist_ok=True)  # create directory if it doesn't exist
         for url, filename, md5_checksum in self.sources:
@@ -35,8 +36,19 @@ class UKResults:
                 caching_enabled=CACHING_ENABLED,
                 verbose=VERBOSE,
             )
+            if not self.retrieve_all_data:  # retrieve just the first dataset
+                return
+        if self.retrieve_all_data:  # all datasets retrieved
             return
-        raise RuntimeError(f"Unable to download {self.verbose_name} data.")
+        else:  # retrieving first dataset only but all fallbacks failed
+            raise RuntimeError(f"Unable to download {self.verbose_name} data.")
+
+    def process(self):
+        pass
+
+
+class UKResults(ETL):
+    """Handles results data for UK General Elections."""
 
     def process(self):
         """Process results data for a UK General Election."""
@@ -46,7 +58,7 @@ class UKResults:
 
         def process_and_export():
             # Either caching disabled or file not yet processed; process regardless.
-            results = utils.process_hoc_sheet(input_file=filename, data_dir=self.directory, sheet_name=self.year)
+            results = utils.process_hoc_sheet(input_file=filename, data_dir=self.directory, sheet_name=str(self.year))
             # Export
             print(f"Exporting dataset to {processed_results_location.resolve()}")
             results.to_csv(processed_results_location, index=False)

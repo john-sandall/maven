@@ -13,40 +13,27 @@ Usage:
     > import maven
     > maven.get('general-election/UK/polls', data_directory='./data/')
 """
-import os
-import warnings
+# import os
+# import warnings
 from pathlib import Path
 
-import requests
+from maven.datasets.general_election.base import ETL
+
+# import requests
 
 
-class UKPolls:
+class UKPolls(ETL):
     """Handles General Election polling data for the United Kingdom."""
 
     def __init__(self, directory=Path("data/general-election/UK/polls")):
-        self.directory = Path(directory)
-
-    def retrieve(self):
-        """Retrieve General Election polling data for the United Kingdom."""
-        target_directory = self.directory / "processed"
-        os.makedirs(target_directory, exist_ok=True)  # create directory if it doesn't exist
-        base_url = "https://s3-eu-west-1.amazonaws.com/sixfifty/"
-        files = [
-            # (source_filename, target_filename)
-            ("polls.csv", "general_election-uk-polls.csv"),
-            ("polls_london.csv", "general_election-london-polls.csv"),
-            ("polls_scotland.csv", "general_election-scotland-polls.csv"),
-            ("polls_wales.csv", "general_election-wales-polls.csv"),
-            ("polls_ni.csv", "general_election-ni-polls.csv"),
+        super(UKPolls, self).__init__(directory=directory)  # inherit base __init__ but override default directory
+        self.sources = [
+            # tuples of (url, filename, checksum)
+            ("https://s3-eu-west-1.amazonaws.com/sixfifty/", "polls.csv", None),
+            ("https://s3-eu-west-1.amazonaws.com/sixfifty/", "polls_london.csv", None),
+            ("https://s3-eu-west-1.amazonaws.com/sixfifty/", "polls_scotland.csv", None),
+            ("https://s3-eu-west-1.amazonaws.com/sixfifty/", "polls_wales.csv", None),
+            ("https://s3-eu-west-1.amazonaws.com/sixfifty/", "polls_ni.csv", None),
         ]
-        for source_filename, target_filename in files:
-            response = requests.get(base_url + source_filename)
-            if response.status_code == 200:
-                with open(target_directory / target_filename, "wb") as f:
-                    f.write(response.content)
-                print(f"Successfully downloaded raw data into {target_directory.resolve()}")
-            else:
-                warnings.warn(f"Received status 404 when trying to retrieve {base_url}{source_filename}")
-
-    def process(self):
-        pass
+        self.retrieve_all_data = True
+        self.verbose_name = "UKPolls"
