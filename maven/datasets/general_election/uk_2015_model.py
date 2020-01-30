@@ -20,13 +20,21 @@ class UK2015Model(Pipeline):
         super(UK2015Model, self).__init__(directory=directory)  # inherit base __init__ but override default directory
         self.sources = [
             # tuples of (url, filename, checksum)
-            ("general-election/UK/2010/results", "general_election-uk-2010-results.csv", '954a0916f5ce791ca566484ce566088d'),
-            ("general-election/UK/2015/results", "general_election-uk-2015-results.csv", '9a785cb19275e4dbc79da67eece6067f'),
-            ("general-election/UK/polls", "general_election-uk-polls.csv", '98f865803c782e1ffd0cdc4774707ae5'),
-            ("general-election/UK/polls", "general_election-london-polls.csv", '97eb4254039a6bca1a882a9afde2b067'),
-            ("general-election/UK/polls", "general_election-scotland-polls.csv", '096354c852a7c30e22a733eec133b9e3'),
-            ("general-election/UK/polls", "general_election-wales-polls.csv", '2134d55e5288bd5b12be2471f4aacab7'),
-            ("general-election/UK/polls", "general_election-ni-polls.csv", 'ea871fad0ce51c03dda09ecec0377dc6'),
+            (
+                "general-election/UK/2010/results",
+                "general_election-uk-2010-results.csv",
+                "954a0916f5ce791ca566484ce566088d",
+            ),
+            (
+                "general-election/UK/2015/results",
+                "general_election-uk-2015-results.csv",
+                "9a785cb19275e4dbc79da67eece6067f",
+            ),
+            ("general-election/UK/polls", "general_election-uk-polls.csv", "98f865803c782e1ffd0cdc4774707ae5"),
+            ("general-election/UK/polls", "general_election-london-polls.csv", "97eb4254039a6bca1a882a9afde2b067"),
+            ("general-election/UK/polls", "general_election-scotland-polls.csv", "096354c852a7c30e22a733eec133b9e3"),
+            ("general-election/UK/polls", "general_election-wales-polls.csv", "2134d55e5288bd5b12be2471f4aacab7"),
+            ("general-election/UK/polls", "general_election-ni-polls.csv", "ea871fad0ce51c03dda09ecec0377dc6"),
         ]
         self.retrieve_all = True
         self.verbose_name = "UK2015Model"
@@ -38,199 +46,149 @@ class UK2015Model(Pipeline):
         processed_directory = self.directory / "processed"
         os.makedirs(processed_directory, exist_ok=True)  # create directory if it doesn't exist
 
-        # TODO: Refactor these sections into functions to make it easier to read.
-
         #############
         # IMPORT DATA
         #############
+        train = 2010
+        test = 2015
+        pred = 2017
+        regions = ["uk", "scotland", "wales", "ni", "london"]
 
         # Import general election results
-        ge_2010 = pd.read_csv(self.directory / "raw" / "general_election-uk-2010-results.csv")
-        ge_2010_full = pd.read_csv(self.directory / "raw" / "general_election-uk-2010-results-full.csv")
-        ge_2015 = pd.read_csv(self.directory / "raw" / "general_election-uk-2015-results.csv")
-        ge_2015_full = pd.read_csv(self.directory / "raw" / "general_election-uk-2015-results-full.csv")
-        polls = pd.read_csv(self.directory / "raw" / "general_election-uk-polls.csv")
+        results = {}
+        results[train] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{train}-results.csv")
+        results[test] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{test}-results.csv")
+        # ge_2010 = pd.read_csv(self.directory / "raw" / "general_election-uk-2010-results.csv")
+        # ge_2015 = pd.read_csv(self.directory / "raw" / "general_election-uk-2015-results.csv")
+        polls = {}
+        for region in regions:
+            polls[region] = pd.read_csv(
+                self.directory / "raw" / f"general_election-{region}-polls.csv", parse_dates=["to"]
+            ).sort_values("to")
 
         # Check constituencies are mergeable
-        assert (
-            set(ge_2010["Press Association Reference"]).difference(set(ge_2015["Press Association ID Number"])) == set()
-        )
-        assert (
-            set(ge_2015["Press Association ID Number"]).difference(set(ge_2010["Press Association Reference"])) == set()
-        )
-        assert len(ge_2010) == len(ge_2010["Press Association Reference"]) == 650
-        assert len(ge_2015) == len(ge_2015["Press Association ID Number"]) == 650
+        assert (results[last].sort_values("ons_id").ons_id == results[this].sort_values("ons_id").ons_id).all()
 
-        # Construct some lookups of the parties we want to model
-        parties_lookup_2010 = {
-            "Con": "con",
-            "Lab": "lab",
-            "LD": "ld",
-            "UKIP": "ukip",
-            "Grn": "grn",
-            "Other": "other",
-        }
-        parties_15 = list(parties_lookup_2010.values())
+        # # Construct some lookups of the parties we want to model
+        # parties_lookup_2010 = {
+        #     "Con": "con",
+        #     "Lab": "lab",
+        #     "LD": "ld",
+        #     "UKIP": "ukip",
+        #     "Grn": "grn",
+        #     "Other": "other",
+        # }
+        # parties_15 = list(parties_lookup_2010.values())
 
-        parties_lookup_2015 = {
-            "C": "con",
-            "Lab": "lab",
-            "LD": "ld",
-            "UKIP": "ukip",
-            "Green": "grn",
-            "SNP": "snp",
-            "PC": "pc",
-            "Other": "other",
-        }
-        parties_17 = list(parties_lookup_2015.values())
+        # parties_lookup_2015 = {
+        #     "C": "con",
+        #     "Lab": "lab",
+        #     "LD": "ld",
+        #     "UKIP": "ukip",
+        #     "Green": "grn",
+        #     "SNP": "snp",
+        #     "PC": "pc",
+        #     "Other": "other",
+        # }
+        # parties_17 = list(parties_lookup_2015.values())
 
-        ##############
-        # 2015 POLLING
-        ##############
+        #########
+        # POLLING
+        #########
 
-        # Get 2015 polling
-        pollsters = polls[(polls.to >= "2015-04-04") & (polls.to <= "2015-05-04")].company.unique()
+        election_dates = {d.year: d for d in [pd.to_datetime(x) for x in ["2010-05-06", "2015-05-07", "2017-06-08"]]}
+        for year in [test, pred]:
+            election_day = election_dates[year]
+            one_week_before = election_day - pd.Timedelta(days=7)
+            one_month_before = election_day - pd.Timedelta(days=30)
 
-        # Use single last poll from each pollster in final week of polling then average out
-        polls = polls[(polls.to >= "2015-04-01") & (polls.to <= "2015-05-07")]
-        pop = polls.loc[:0]
-        for p in pollsters:
-            pop = pop.append(polls[polls.company == p].tail(1))
+            # Look at pollsters active in final month before each election
+            pollsters = polls["uk"][
+                (polls["uk"].to >= one_month_before) & (polls["uk"].to < election_day)
+            ].company.unique()
 
-        # Create new polls dictionary by geo containing simple average across all pollsters
-        polls = {"UK": {}}
-        for p in ["con", "lab", "ld", "ukip", "grn"]:
-            polls["UK"][p] = pop[p].mean()
-        polls["UK"] = pd.Series(polls["UK"])
+            # Use single last poll from each pollster in final week of polling then average out
+            final_polls = {}
+            for region in regions:
+                final_polls[region] = (
+                    polls[region][(polls[region].to >= one_week_before) & (polls[region].to < election_day)]
+                    .groupby("company")
+                    .tail(1)
+                )
 
-        # Scotland, Wales, NI, London not available in 2015 data (we haven't extracted them yet!)
-        # Add Other
-        for geo in ["UK"]:
-            if "other" not in polls[geo]:
-                polls[geo]["other"] = 1 - sum(polls[geo])
+            # Calculate regional polling
+            if year == 2015:
+                parties = ["con", "lab", "ld", "ukip", "grn"]
+                # Create new polls dictionary by geo containing simple average across all pollsters
+                national_polling = final_polls["uk"].mean().loc[parties]
+                # We don't yet have regional polling in 2015 for Scotland, Wales, NI, London - add as other.
+                national_polling["other"] = 1 - national_polling.sum()
+                poll_of_polls = {"uk": national_polling}
 
-        # Reweight to 100%
-        for geo in ["UK"]:
-            polls[geo] = polls[geo] / polls[geo].sum()
+                # Export
+                polls_csv_list = []
+                for region in poll_of_polls:
+                    polls_csv_list.append(
+                        pd.DataFrame(
+                            {"region": region, "party": poll_of_polls[region].index, "voteshare": poll_of_polls[region]}
+                        ).reset_index(drop=True)
+                    )
+                polls_csv = pd.concat(polls_csv_list, axis=0)
+                polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
+            elif year == 2017:
+                parties = {
+                    "uk": ["con", "lab", "ld", "ukip", "grn", "snp"],
+                    "scotland": ["con", "lab", "ld", "ukip", "grn", "snp"],
+                    "wales": ["con", "lab", "ld", "ukip", "grn", "pc"],
+                    "ni": ["con", "ukip", "grn"],
+                    "london": ["con", "lab", "ld", "ukip", "grn"],
+                    "england_not_london": ["con", "lab", "ld", "ukip", "grn"],
+                }
+                all_parties = set([x for y in parties.values() for x in y])
+                poll_of_polls = {}
+                for region in regions:
+                    sample_size_weights = final_polls[region].sample_size / final_polls[region].sample_size.sum()
+                    weighted_poll_of_polls = (
+                        final_polls[region][parties[region]]
+                        .multiply(sample_size_weights, axis=0)
+                        .sum()
+                        .reindex(all_parties, fill_value=0.0)
+                    )
+                    poll_of_polls[region] = weighted_poll_of_polls
 
-        ##############
-        # 2017 POLLING
-        ##############
-        # TODO: This is messy.
-        # TODO: This should be in the polling processing pipeline.
-        # Latest polling data
-        polls_17 = {"UK": {}}
-        polls_17_uk = pd.read_csv(self.directory / "raw" / "general_election-uk-polls.csv")
-        # Filter to recent data
-        polls_17_uk = polls_17_uk[polls_17_uk.to >= "2017-06-06"]
-        # Add parties
-        for p in ["con", "lab", "ld", "ukip", "grn", "snp"]:
-            polls_17["UK"][p] = (polls_17_uk.sample_size * polls_17_uk[p]).sum() / polls_17_uk.sample_size.sum()
-        polls_17["UK"] = pd.Series(polls_17["UK"], index=["con", "lab", "ld", "ukip", "snp", "grn"])
+                # Estimate polling for England excluding London
+                # survation_wts from http://survation.com/wp-content/uploads/2017/06/Final-MoS-Post-BBC-Event-Poll-020617SWCH-1c0d4h9.pdf
+                survation_wts = pd.Series({"scotland": 85, "england": 881, "wales": 67, "ni": 16})
+                survation_wts["uk"] = survation_wts.sum()
+                survation_wts["london"] = 137
+                survation_wts["england_not_london"] = survation_wts.england - survation_wts.london
 
-        # Repeat for Scotland polling...
-        polls_17["Scotland"] = {}
-        polls_17_tmp = pd.read_csv(self.directory / "raw" / "general_election-scotland-polls.csv")
-        polls_17_tmp = polls_17_tmp[polls_17_tmp.to >= "2017-06-05"]
-        for p in ["con", "lab", "ld", "ukip", "snp", "grn"]:
-            polls_17["Scotland"][p] = (
-                polls_17_tmp.sample_size * polls_17_tmp[p]
-            ).sum() / polls_17_tmp.sample_size.sum()
-        polls_17["Scotland"] = pd.Series(polls_17["Scotland"], index=["con", "lab", "ld", "ukip", "snp", "grn"])
+                england_not_london = poll_of_polls["uk"] * survation_wts["uk"]
+                for region in ["scotland", "wales", "ni", "london"]:
+                    england_not_london = england_not_london.sub(
+                        poll_of_polls[region] * survation_wts[region], fill_value=0.0
+                    )
+                england_not_london /= survation_wts["england_not_london"]
+                england_not_london.loc[["pc", "snp"]] = 0.0
+                poll_of_polls["england_not_london"] = england_not_london
 
-        # ...and Wales
-        polls_17["Wales"] = {}
-        polls_17_tmp = pd.read_csv(self.directory / "raw" / "general_election-wales-polls.csv")
-        polls_17_tmp = polls_17_tmp[polls_17_tmp.to >= "2017-06-07"]
-        for p in ["con", "lab", "ld", "ukip", "pc", "grn"]:
-            polls_17["Wales"][p] = (polls_17_tmp.sample_size * polls_17_tmp[p]).sum() / polls_17_tmp.sample_size.sum()
-        polls_17["Wales"] = pd.Series(polls_17["Wales"], index=["con", "lab", "ld", "ukip", "pc", "grn"])
+                # Fix PC (Plaid Cymru) for UK
+                poll_of_polls["uk"]["pc"] = poll_of_polls["wales"]["pc"] * survation_wts["wales"] / survation_wts["uk"]
 
-        # NI
-        polls_17["NI"] = (
-            pd.read_csv(self.directory / "raw" / "general_election-ni-polls.csv")
-            .sort_values(by="to", ascending=False)
-            .iloc[0]
-        )
-        # Collate all NI parties under other
-        for k in polls_17["NI"].index:
-            if k not in parties_17:
-                del polls_17["NI"][k]
+                # Add Other
+                for region in regions + ["england_not_london"]:
+                    poll_of_polls[region]["other"] = 1 - poll_of_polls[region].sum()
 
-        del polls_17["NI"]["other"]
-
-        # London
-        polls_17["London"] = {}
-        polls_17_tmp = pd.read_csv(self.directory / "raw" / "general_election-london-polls.csv")
-        polls_17_tmp = polls_17_tmp[polls_17_tmp.to >= "2017-05-31"]
-        for p in ["con", "lab", "ld", "ukip", "grn"]:
-            polls_17["London"][p] = (polls_17_tmp.sample_size * polls_17_tmp[p]).sum() / polls_17_tmp.sample_size.sum()
-        polls_17["London"] = pd.Series(polls_17["London"], index=["con", "lab", "ld", "ukip", "grn"])
-
-        # Estimate polling for England excluding London
-        survation_wts = {
-            # from http://survation.com/wp-content/uploads/2017/06/Final-MoS-Post-BBC-Event-Poll-020617SWCH-1c0d4h9.pdf
-            "Scotland": 85,
-            "England": 881,
-            "Wales": 67,
-            "London": 137,
-            "NI": 16,
-        }
-        survation_wts["England_not_london"] = survation_wts["England"] - survation_wts["London"]
-        survation_wts["UK"] = (
-            survation_wts["Scotland"] + survation_wts["England"] + survation_wts["Wales"] + survation_wts["NI"]
-        )
-
-        def calculate_england_not_london(party):
-            out = polls_17["UK"][party] * survation_wts["UK"]
-            for geo in ["Scotland", "Wales", "NI", "London"]:
-                if party in polls_17[geo]:
-                    out = out - polls_17[geo][party] * survation_wts[geo]
-            out = out / survation_wts["England_not_london"]
-            return out
-
-        polls_17["England_not_london"] = {"pc": 0, "snp": 0}
-        for party in ["con", "lab", "ld", "ukip", "grn"]:
-            polls_17["England_not_london"][party] = calculate_england_not_london(party)
-
-        polls_17["England_not_london"] = pd.Series(polls_17["England_not_london"])
-
-        # Fill in the gaps
-        for geo in ["UK", "Scotland", "Wales", "NI", "London", "England_not_london"]:
-            for party in ["con", "lab", "ld", "ukip", "grn", "snp", "pc"]:
-                if party not in polls_17[geo]:
-                    polls_17[geo][party] = 0
-
-        # Fix PC (Plaid Cymru) for UK
-        polls_17["UK"]["pc"] = polls_17["Wales"]["pc"] * survation_wts["Wales"] / survation_wts["UK"]
-
-        # Add Other
-        for geo in ["UK", "Scotland", "Wales", "NI", "London", "England_not_london"]:
-            if "other" not in polls_17[geo]:
-                polls_17[geo]["other"] = 1 - sum(polls_17[geo])
-
-        # This doesn't work for UK or England_not_london; set current other polling to match 2015 result
-        polls_17["UK"]["other"] = 0.03  # ge.other.sum() / ge['Valid Votes'].sum()
-        polls_17["England_not_london"][
-            "other"
-        ] = 0.01  # ge[ge.geo == 'England_not_london'].other.sum() / ge[ge.geo == 'England_not_london']['Valid Votes'].sum()
-
-        # Reweight to 100%
-        for geo in ["UK", "Scotland", "Wales", "NI", "London", "England_not_london"]:
-            polls_17[geo] = polls_17[geo] / polls_17[geo].sum()
-
-        # Export polling data
-        polls_15_csv = pd.DataFrame(columns=["con", "lab", "ld", "ukip", "grn", "snp", "pc", "other"])
-        for geo in polls:
-            for party in polls[geo].index:
-                polls_15_csv.loc[geo, party] = polls[geo].loc[party]
-        # polls_15_csv.to_csv(polls_data_dir / 'final_polls_2015.csv', index=True)
-
-        polls_17_csv = pd.DataFrame(columns=["con", "lab", "ld", "ukip", "grn", "snp", "pc", "other"])
-        for geo in polls_17:
-            for party in polls_17[geo].index:
-                polls_17_csv.loc[geo, party] = polls_17[geo].loc[party]
-        # polls_17_csv.to_csv(polls_data_dir / 'final_polls_2017.csv', index=True)
+                # Export
+                polls_csv_list = []
+                for region in poll_of_polls:
+                    polls_csv_list.append(
+                        pd.DataFrame(
+                            {"region": region, "party": poll_of_polls[region].index, "voteshare": poll_of_polls[region]}
+                        ).reset_index(drop=True)
+                    )
+                polls_csv = pd.concat(polls_csv_list, axis=0)
+                polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
 
         #############################
         # Calculate uplifts ("swing")
