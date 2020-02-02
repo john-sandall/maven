@@ -19,7 +19,7 @@ pip install maven
 ## Usage
 ```python
 import maven
-maven.get('general-election/UK/2015/results', data_directory='./data/')
+maven.get('general-election/UK/2017/results', data_directory='./data/')
 ```
 
 
@@ -30,8 +30,9 @@ Data dictionaries for all datasets are available by clicking on the dataset's na
 | -- | -- | -- | -- | -- |
 | [**`general-election/UK/2010/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2010 General Election results | 6th May 2010 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
 | [**`general-election/UK/2015/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2015 General Election results | 7th May 2015 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
-| [**`general-election/UK/2017/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2015 General Election results | 8th June 2017 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
-| [**`general-election/UK/2015/model`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | Model-ready datasets for forecasting the 2015 and 2017 UK General Elections | 2010, 2015 & 2017 data | [SixFifty](https://github.com/six50/) | Mixed |
+| [**`general-election/UK/2017/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2017 General Election results | 8th June 2017 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
+| [**`general-election/UK/2015/model`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | Model-ready datasets for forecasting the 2015 UK General Election | 2010 & 2015 data | [uk_2015_model.py](https://github.com/john-sandall/maven/blob/master/maven/datasets/general_election/uk_2015_model.py) | Mixed |
+| [**`general-election/UK/2017/model`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | Model-ready datasets for forecasting the 2017 UK General Election | 2015 & 2017 data | [uk_2017_model.py](https://github.com/john-sandall/maven/blob/master/maven/datasets/general_election/uk_2017_model.py) | Mixed |
 | [**`general-election/UK/polls`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK General Election opinion polling | May 2005 - June 2017 | [SixFifty](https://github.com/six50/pipeline/tree/master/data/polls/) | Unknown |
 
 
