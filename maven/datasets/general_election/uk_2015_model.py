@@ -43,7 +43,7 @@ class UK2015Model(Pipeline):
 
     def process(self):
         """Process results data from the United Kingdom's 2010 and 2015 General Elections
-           into a single model-ready dataset for predicting the 2015 General Election."""
+            into a single model-ready dataset for predicting the 2015 General Election."""
         processed_directory = self.directory / "processed"
         os.makedirs(processed_directory, exist_ok=True)  # create directory if it doesn't exist
 
@@ -123,6 +123,25 @@ class UK2015Model(Pipeline):
         # Check constituencies are mergeable
         assert (results[train].sort_values("ons_id").ons_id == results[test].sort_values("ons_id").ons_id).all()
 
+        # Add the winner for the results
+        for year in [train, test]:
+            res = results[year].copy()
+            winners = utils.calculate_winners(res, "voteshare")
+            res["winner"] = res.ons_id.map(winners)
+
+            # Apply fixes
+            if year in winner_fixes:
+                for ons_id, actual_winner in winner_fixes[year]:
+                    res.loc[res.ons_id == ons_id, "winner"] = actual_winner
+
+            # Check this matches the results on record
+            seat_count = res[["ons_id", "winner"]].drop_duplicates().groupby("winner").size()
+            assert dict(seat_count) == results_seat_count[year]
+
+            # Add boolean per row for if this party won this seat
+            res["won_here"] = res.party == res.winner
+            results[year] = res.copy()
+
         #########
         # POLLING
         #########
@@ -166,7 +185,7 @@ class UK2015Model(Pipeline):
                         ).reset_index(drop=True)
                     )
                 polls_csv = pd.concat(polls_csv_list, axis=0)
-                polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
+                # polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
             elif year == 2017:
                 parties = {
                     "uk": ["con", "lab", "ld", "ukip", "grn", "snp"],
@@ -218,7 +237,7 @@ class UK2015Model(Pipeline):
                         ).reset_index(drop=True)
                     )
                 polls_csv = pd.concat(polls_csv_list, axis=0)
-                polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
+                # polls_csv.to_csv(processed_directory / f"final_polls_{year}.csv", index=False)
 
             # If year is 2015, last_election is 2010
             last_election = train if year == test else test
@@ -271,19 +290,6 @@ class UK2015Model(Pipeline):
             national_swing_winners = utils.calculate_winners(res, "national_swing_forecast")
             res["national_swing_winner"] = res.ons_id.map(national_swing_winners)
 
-            # Add the winner for the results
-            winners = utils.calculate_winners(res, "voteshare")
-            res["winner"] = res.ons_id.map(winners)
-
-            # Apply fixes
-            if last_election in winner_fixes:
-                for ons_id, actual_winner in winner_fixes[last_election]:
-                    res.loc[res.ons_id == ons_id, "winner"] = actual_winner
-
-            # Check this matches the results on record
-            seat_count = res[["ons_id", "winner"]].drop_duplicates().groupby("winner").size()
-            assert dict(seat_count) == results_seat_count[last_election]
-
             ########################################################
             # Calculate Geo-Level Voteshare + Swing inc. all parties
             ########################################################
@@ -306,7 +312,7 @@ class UK2015Model(Pipeline):
                 res["geo_swing"] = (res.geo_polls / res.geo_voteshare) - 1
 
                 # Forecast is previous result multiplied by swing uplift
-                res["geo_swing_forecast"] = res.voteshare * (1 + res.national_swing)
+                res["geo_swing_forecast"] = res.voteshare * (1 + res.geo_swing)
 
                 # Predict the winner in each constituency using geo_swing_forecast
                 geo_swing_winners = utils.calculate_winners(res, "geo_swing_forecast")
@@ -315,316 +321,197 @@ class UK2015Model(Pipeline):
             # Put res back into results[last_election]
             results[last_election] = res.copy()
 
-        ###########################
-        # Create ML-ready dataframe
-        ###########################
+        ######################################
+        # Create ML-ready dataframe and export
+        ######################################
 
         # Use "last" and "now" in order to re-use this code for either train->test or test->pred.
         last = train
         now = test
-        df = (
-            results[now][
-                [
-                    "ons_id",
-                    "constituency",
-                    "county",
-                    "region",
-                    "geo",
-                    "country",
-                    "electorate",
-                    "total_votes",
-                    "turnout",
-                    "party",
-                    "votes",
-                    "voteshare",
-                ]
+        df_cols_now = [
+            "ons_id",
+            "constituency",
+            "county",
+            "region",
+            "geo",
+            "country",
+            "electorate",
+            "total_votes",
+            "turnout",
+            "party",
+            "votes",
+            "voteshare",
+            "winner",
+        ]
+        df_cols_last = [
+            "ons_id",
+            "party",
+            "total_votes",
+            "turnout",
+            "votes",
+            "voteshare",
+            "national_polls",
+            "national_voteshare",
+            "national_swing",
+            "national_swing_forecast",
+            "national_swing_winner",
+            "winner",
+            "won_here",
+        ]
+        df_cols_final_geo = []
+        if "geo_polls" in results[last].columns:
+            df_cols_last += ["geo_polls", "geo_voteshare", "geo_swing", "geo_swing_forecast", "geo_swing_winner"]
+            df_cols_final_geo += [
+                "geo_polls_now",
+                "geo_voteshare_last",
+                "geo_swing",
+                "geo_swing_forecast",
+                "geo_swing_winner",
             ]
+        df_cols_final = (
+            [
+                # Constant per constituency
+                "ons_id",
+                "constituency",
+                "county",
+                "region",
+                "geo",
+                "country",
+                "electorate",
+                "total_votes_last",
+                "turnout_last",
+                # Constant per party (per constituency)
+                "party",
+                "votes_last",
+                "voteshare_last",
+                "winner_last",
+                "won_here_last",
+                "national_voteshare_last",
+                "national_polls_now",
+                "national_swing",
+                "national_swing_forecast",
+                "national_swing_winner",
+            ]
+            + df_cols_final_geo
+            + [
+                # Target
+                "total_votes_now",
+                "turnout_now",
+                "votes_now",
+                "voteshare_now",
+                "winner_now",
+            ]
+        )
+        df = (
+            results[now][df_cols_now]
             .rename(
                 columns={
                     "total_votes": "total_votes_now",
                     "turnout": "turnout_now",
                     "votes": "votes_now",
                     "voteshare": "voteshare_now",
+                    "winner": "winner_now",
                 }
             )
             .merge(
-                results[last][
-                    [
-                        "ons_id",
-                        "party",
-                        "votes",
-                        "voteshare",
-                        "national_polls",
-                        "national_voteshare",
-                        "national_swing",
-                        "national_swing_forecast",
-                        "national_swing_winner",
-                    ]
-                ].rename(
+                # Note: even though polling represents "now", they're in results[last] to calculate swings.
+                results[last][df_cols_last].rename(
                     columns={
+                        "total_votes": "total_votes_last",
+                        "turnout": "turnout_now_last",
                         "votes": "votes_last",
                         "voteshare": "voteshare_last",
                         "national_polls": "national_polls_now",
+                        "geo_polls": "geo_polls_now",
                         "national_voteshare": "national_voteshare_last",
+                        "geo_voteshare": "geo_voteshare_last",
+                        "winner": "winner_last",
+                        "won_here": "won_here_last",
                     }
-                )
+                ),
+                on=["ons_id", "party"],
+                how="inner",
+                validate="1:1",
             )
+            .filter(df_cols_final)
         )
+        print(f"Exporting {last}->{now} model dataset to {processed_directory.resolve()}")
+        df.to_csv(processed_directory / f"general_election-uk-{now}-model.csv", index=False)
 
-        ### GOT TO HERE - double check the polls and swing forecasts in last vs now, national_swing_winner pertains to which year?! ###
-
-        # polls_now
-        df["polls_now"] = df.party.map(polls["UK"])
-
-        # swing_now
-        swing_now = pd.melt(
-            ge_2010[["Press Association Reference"] + [p + "_swing" for p in parties]],
-            id_vars=["Press Association Reference"],
-            value_vars=[p + "_swing" for p in parties],
-            var_name="party",
-            value_name="swing_now",
-        )
-        swing_now["party"] = swing_now.party.apply(lambda x: x.replace("_swing", ""))
-
-        df = pd.merge(left=df, right=swing_now, how="left", on=["Press Association Reference", "party"],)
-
-        # swing_forecast_pc
-        swing_forecast_pc = pd.melt(
-            ge_2010[["Press Association Reference"] + [p + "_forecast" for p in parties]],
-            id_vars=["Press Association Reference"],
-            value_vars=[p + "_forecast" for p in parties],
-            var_name="party",
-            value_name="swing_forecast_pc",
-        )
-        swing_forecast_pc["party"] = swing_forecast_pc.party.apply(lambda x: x.replace("_forecast", ""))
-
-        df = pd.merge(left=df, right=swing_forecast_pc, how="left", on=["Press Association Reference", "party"],)
-
-        # swing_forecast_win
-        swing_forecast_win = ge_2010[["Press Association Reference", "win_15"]]
-        swing_forecast_win.columns = ["Press Association Reference", "swing_forecast_win"]
-        df = pd.merge(left=df, right=swing_forecast_win, on=["Press Association Reference"])
-
-        # actual_win_now
-        actual_win_now = ge_2010[["Press Association Reference", "act_15"]]
-        actual_win_now.columns = ["Press Association Reference", "actual_win_now"]
-        df = pd.merge(left=df, right=actual_win_now, on=["Press Association Reference"])
-
-        # actual_pc_now
-        actual_pc_now = pd.melt(
-            ge_2010[["Press Association Reference"] + [p + "_actual" for p in parties]],
-            id_vars=["Press Association Reference"],
-            value_vars=[p + "_actual" for p in parties],
-            var_name="party",
-            value_name="actual_pc_now",
-        )
-        actual_pc_now["party"] = actual_pc_now.party.apply(lambda x: x.replace("_actual", ""))
-
-        df = pd.merge(left=df, right=actual_pc_now, how="left", on=["Press Association Reference", "party"],)
-
-        # dummy party
-        df = pd.concat([df, pd.get_dummies(df.party)], axis=1)
-
-        # dummy region
-        df = pd.concat([df, pd.get_dummies(df.Region, prefix="Region")], axis=1)
-
-        # won_here_last
-        df["won_here_last"] = (df["party"] == df["win_last"]).astype("int")
-
-        # turnout
-        df["turnout"] = df.Votes / df.Electorate
-
-        # parties = ["con", "lab", "ld", "ukip", "grn"]
-        # act_15_lookup = {k: v for i, (k, v) in ge_2015[["Press Association ID Number", "winner"]].iterrows()}
-        # ge_2010["act_15"] = ge_2010["Press Association Reference"].map(act_15_lookup)
-        # pc_15_lookup = {
-        #     p: {k: v for i, (k, v) in ge_2015[["Press Association ID Number", p + "_pc"]].iterrows()} for p in parties
-        # }
-        # for p in parties:
-        #     ge_2010[p + "_actual"] = ge_2010["Press Association Reference"].map(pc_15_lookup[p])
-
-        # df = ge_2010[["Press Association Reference", "Constituency Name", "Region", "Electorate", "Votes",] + parties]
-        # df = pd.melt(
-        #     df,
-        #     id_vars=["Press Association Reference", "Constituency Name", "Region", "Electorate", "Votes",],
-        #     value_vars=parties,
-        #     var_name="party",
-        #     value_name="votes_last",
-        # )
-
-        # # pc_last
-        # pc_last = pd.melt(
-        #     ge_2010[["Press Association Reference"] + [p + "_pc" for p in parties]],
-        #     id_vars=["Press Association Reference"],
-        #     value_vars=[p + "_pc" for p in parties],
-        #     var_name="party",
-        #     value_name="pc_last",
-        # )
-        # pc_last["party"] = pc_last.party.apply(lambda x: x.replace("_pc", ""))
-        # df = pd.merge(left=df, right=pc_last, how="left", on=["Press Association Reference", "party"],)
-
-        # # win_last
-        # win_last = ge_2010[["Press Association Reference", "winner"]]
-        # win_last.columns = ["Press Association Reference", "win_last"]
-        # df = pd.merge(left=df, right=win_last, on=["Press Association Reference"])
-
-        # # polls_now
-        # df["polls_now"] = df.party.map(polls["UK"])
-
-        # # swing_now
-        # swing_now = pd.melt(
-        #     ge_2010[["Press Association Reference"] + [p + "_swing" for p in parties]],
-        #     id_vars=["Press Association Reference"],
-        #     value_vars=[p + "_swing" for p in parties],
-        #     var_name="party",
-        #     value_name="swing_now",
-        # )
-        # swing_now["party"] = swing_now.party.apply(lambda x: x.replace("_swing", ""))
-
-        # df = pd.merge(left=df, right=swing_now, how="left", on=["Press Association Reference", "party"],)
-
-        # # swing_forecast_pc
-        # swing_forecast_pc = pd.melt(
-        #     ge_2010[["Press Association Reference"] + [p + "_forecast" for p in parties]],
-        #     id_vars=["Press Association Reference"],
-        #     value_vars=[p + "_forecast" for p in parties],
-        #     var_name="party",
-        #     value_name="swing_forecast_pc",
-        # )
-        # swing_forecast_pc["party"] = swing_forecast_pc.party.apply(lambda x: x.replace("_forecast", ""))
-
-        # df = pd.merge(left=df, right=swing_forecast_pc, how="left", on=["Press Association Reference", "party"],)
-
-        # # swing_forecast_win
-        # swing_forecast_win = ge_2010[["Press Association Reference", "win_15"]]
-        # swing_forecast_win.columns = ["Press Association Reference", "swing_forecast_win"]
-        # df = pd.merge(left=df, right=swing_forecast_win, on=["Press Association Reference"])
-
-        # # actual_win_now
-        # actual_win_now = ge_2010[["Press Association Reference", "act_15"]]
-        # actual_win_now.columns = ["Press Association Reference", "actual_win_now"]
-        # df = pd.merge(left=df, right=actual_win_now, on=["Press Association Reference"])
-
-        # # actual_pc_now
-        # actual_pc_now = pd.melt(
-        #     ge_2010[["Press Association Reference"] + [p + "_actual" for p in parties]],
-        #     id_vars=["Press Association Reference"],
-        #     value_vars=[p + "_actual" for p in parties],
-        #     var_name="party",
-        #     value_name="actual_pc_now",
-        # )
-        # actual_pc_now["party"] = actual_pc_now.party.apply(lambda x: x.replace("_actual", ""))
-
-        # df = pd.merge(left=df, right=actual_pc_now, how="left", on=["Press Association Reference", "party"],)
-
-        # # dummy party
-        # df = pd.concat([df, pd.get_dummies(df.party)], axis=1)
-
-        # # dummy region
-        # df = pd.concat([df, pd.get_dummies(df.Region, prefix="Region")], axis=1)
-
-        # # won_here_last
-        # df["won_here_last"] = (df["party"] == df["win_last"]).astype("int")
-
-        # # turnout
-        # df["turnout"] = df.Votes / df.Electorate
-
-        ########################################
-        # Export final 2010 -> 2015 training set
-        ########################################
-        print(f"Exporting 2010->2015 model dataset to {processed_directory.resolve()}")
-        df.to_csv(processed_directory / "general_election-uk-2015-model.csv", index=False)
-
-        ######################
-        # REPEAT FOR 2015-2017
-        ######################
-        # Recreate this training dataset using same column names for 2015 -> 2017 for a GE2017 forecast
-        # TODO: Needs refactoring!
-        # Add SNP and Plaid Cymru
-        parties += ["snp", "pc"]
-        df15 = ge_2015[
-            ["Press Association ID Number", "Constituency Name", "Region", "geo", "Electorate", "Valid Votes",]
-            + parties
-        ]
-        df15.columns = [
-            "Press Association ID Number",
-            "Constituency Name",
-            "Region",
+        # Now build dataset to use for predictions
+        last = test
+        now = pred
+        df_cols_last = [
+            "ons_id",
+            "constituency",
+            "county",
+            "region",
             "geo",
-            "Electorate",
-            "Votes",
-        ] + parties
-        df15 = pd.melt(
-            df15,
-            id_vars=["Press Association ID Number", "Constituency Name", "Region", "geo", "Electorate", "Votes",],
-            value_vars=parties,
-            var_name="party",
-            value_name="votes_last",
+            "country",
+            "electorate",
+            "total_votes",
+            "turnout",
+            "party",
+            "votes",
+            "voteshare",
+            "winner",
+            "won_here",
+            "national_polls",
+            "national_voteshare",
+            "national_swing",
+            "national_swing_forecast",
+            "national_swing_winner",
+        ]
+        df_cols_final_geo = []
+        if "geo_polls" in results[last].columns:
+            df_cols_last += ["geo_polls", "geo_voteshare", "geo_swing", "geo_swing_forecast", "geo_swing_winner"]
+            df_cols_final_geo += [
+                "geo_polls_now",
+                "geo_voteshare_last",
+                "geo_swing",
+                "geo_swing_forecast",
+                "geo_swing_winner",
+            ]
+        df_cols_final = [
+            # Constant per constituency
+            "ons_id",
+            "constituency",
+            "county",
+            "region",
+            "geo",
+            "country",
+            "electorate",
+            "total_votes_last",
+            "turnout_last",
+            # Constant per party (per constituency)
+            "party",
+            "votes_last",
+            "voteshare_last",
+            "winner_last",
+            "won_here_last",
+            "national_voteshare_last",
+            "national_polls_now",
+            "national_swing",
+            "national_swing_forecast",
+            "national_swing_winner",
+        ] + df_cols_final_geo
+        df = (
+            results[last][df_cols_last]
+            .rename(
+                columns={
+                    "total_votes": "total_votes_last",
+                    "turnout": "turnout_last",
+                    "votes": "votes_last",
+                    "voteshare": "voteshare_last",
+                    "national_polls": "national_polls_now",
+                    "geo_polls": "geo_polls_now",
+                    "national_voteshare": "national_voteshare_last",
+                    "geo_voteshare": "geo_voteshare_last",
+                    "winner": "winner_last",
+                    "won_here": "won_here_last",
+                }
+            )
+            .filter(df_cols_final)
         )
-
-        # pc_last
-        pc_last = pd.melt(
-            ge_2015[["Press Association ID Number"] + [p + "_pc" for p in parties]],
-            id_vars=["Press Association ID Number"],
-            value_vars=[p + "_pc" for p in parties],
-            var_name="party",
-            value_name="pc_last",
-        )
-        pc_last["party"] = pc_last.party.apply(lambda x: x.replace("_pc", ""))
-
-        df15 = pd.merge(left=df15, right=pc_last, how="left", on=["Press Association ID Number", "party"],)
-
-        # win_last
-        win_last = ge_2015[["Press Association ID Number", "winner"]]
-        win_last.columns = ["Press Association ID Number", "win_last"]
-        df15 = pd.merge(left=df15, right=win_last, on=["Press Association ID Number"])
-
-        # polls_now <- USE REGIONAL POLLING! (Possibly a very bad idea, the regional UNS performed worse than national!)
-        df15["polls_now"] = df15.apply(lambda row: polls_17[row.geo][row.party], axis=1)
-
-        # swing_now
-        swing_now = pd.melt(
-            ge_2015[["Press Association ID Number"] + [p + "_swing" for p in parties]],
-            id_vars=["Press Association ID Number"],
-            value_vars=[p + "_swing" for p in parties],
-            var_name="party",
-            value_name="swing_now",
-        )
-        swing_now["party"] = swing_now.party.apply(lambda x: x.replace("_swing", ""))
-
-        df15 = pd.merge(left=df15, right=swing_now, how="left", on=["Press Association ID Number", "party"],)
-
-        # swing_forecast_pc
-        swing_forecast_pc = pd.melt(
-            ge_2015[["Press Association ID Number"] + [p + "_2017_forecast" for p in parties]],
-            id_vars=["Press Association ID Number"],
-            value_vars=[p + "_2017_forecast" for p in parties],
-            var_name="party",
-            value_name="swing_forecast_pc",
-        )
-        swing_forecast_pc["party"] = swing_forecast_pc.party.apply(lambda x: x.replace("_2017_forecast", ""))
-
-        df15 = pd.merge(left=df15, right=swing_forecast_pc, how="left", on=["Press Association ID Number", "party"],)
-
-        # swing_forecast_win
-        swing_forecast_win = ge_2015[["Press Association ID Number", "win_17"]]
-        swing_forecast_win.columns = ["Press Association ID Number", "swing_forecast_win"]
-        df15 = pd.merge(left=df15, right=swing_forecast_win, on=["Press Association ID Number"])
-
-        # dummy party
-        df15 = pd.concat([df15, pd.get_dummies(df15.party)], axis=1)
-
-        # dummy region
-        df15 = pd.concat([df15, pd.get_dummies(df15.Region, prefix="Region")], axis=1)
-
-        # won_here_last
-        df15["won_here_last"] = (df15["party"] == df15["win_last"]).astype("int")
-
-        # turnout
-        df15["turnout"] = df.Votes / df.Electorate
-
-        ##########################################
-        # Export final 2015 -> 2017 prediction set
-        ##########################################
-        print(f"Exporting 2015->2017 model dataset to {processed_directory.resolve()}")
-        df15.to_csv(processed_directory / "general_election-uk-2017-model.csv", index=False)
+        print(f"Exporting {last}->{now} model dataset to {processed_directory.resolve()}")
+        df.to_csv(processed_directory / f"general_election-uk-{now}-model.csv", index=False)
