@@ -7,7 +7,6 @@ import shutil
 import warnings
 from urllib.parse import urlparse
 
-import pandas as pd
 import requests
 
 import maven
@@ -86,19 +85,3 @@ def retrieve_from_cache_if_exists(
         print(f"Checksum for {filename}: {downloaded_file_md5_checksum}")
     if md5_checksum and downloaded_file_md5_checksum != md5_checksum:
         warnings.warn(f"MD5 checksum doesn't match for {filename}")
-
-
-##################
-# PIPELINE - MODEL
-##################
-
-
-def calculate_winners(df, voteshare_col):
-    """Assumes df has `ons_id` and `party` columns."""
-    return (
-        df.sort_values(voteshare_col, ascending=False)
-        .groupby("ons_id")
-        .head(1)[["ons_id", "party"]]
-        .set_index("ons_id")
-        .party
-    )
