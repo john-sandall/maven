@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2020-02-02
+### Added
+- Updated & refactored polling pipeline code.
+- Updated & refactored pipeline for building model-ready datasets for 2015/2017 UK general elections.
+
 ## [0.0.10] - 2020-01-26
 ### Added
 - Raw datasets are now cached on download, and processed datasets cached after processing, and always checked against MD5 for integrity.
@@ -66,7 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Barebones functionality, Python package requirements (setup.py, Pipfile, .gitignore, LICENSE)
 
 
-[Unreleased]: https://github.com/john-sandall/maven/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/john-sandall/maven/compare/v0.0.11...HEAD
+[0.0.11]: https://github.com/john-sandall/maven/compare/v0.0.10...v0.0.11
+[0.0.10]: https://github.com/john-sandall/maven/compare/v0.0.9...v0.0.10
+[0.0.9]: https://github.com/john-sandall/maven/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/john-sandall/maven/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/john-sandall/maven/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/john-sandall/maven/compare/v0.0.5...v0.0.6
