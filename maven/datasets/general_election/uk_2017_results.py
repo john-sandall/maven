@@ -24,6 +24,7 @@ class UK2017Results(UKResults):
     """Handles results data for the United Kingdom's 2017 General Election."""
 
     def __init__(self, directory=Path("data/general-election/UK/2017/results")):
+        super(UK2017Results, self).__init__(directory=directory)
         self.directory = Path(directory)
         self.sources = [
             # url, filename, checksum

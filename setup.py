@@ -19,7 +19,7 @@ setuptools.setup(
     url="https://github.com/john-sandall/maven",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=["pandas==0.24.2", "requests==2.22.0", "xlrd==1.2.0",],
+    install_requires=["pandas==1.0.0", "requests==2.22.0", "xlrd==1.2.0",],
     python_requires="==3.7.*",
     setup_requires=["pytest-runner"],
     test_suite="tests",

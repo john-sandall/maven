@@ -1,11 +1,11 @@
 """
 Running tests in development:
     $ cd /path/to/repo
-    $ python -m pytest
+    $ python -m pytest ./tests/datasets/test_uk_models
 
 Running tests against installed version (either `pip install .` or `pip install maven`):
     $ cd /path/to/repo
-    $ pytest
+    $ pytest ./tests/datasets/test_uk_models
 """
 
 from pathlib import Path
