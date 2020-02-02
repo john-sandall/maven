@@ -5,8 +5,7 @@ If you have any questions about these datasets please [contact me @John_Sandall]
 
 ## Sources
 We aim to source our data directly from the most authorative data provider, falling back to less authorative sources where a primary source isn't available. By country:
-
-- **United Kingdom:** [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data).
+- **United Kingdom:** [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647).
 
 
 ## Data dictionaries
@@ -14,39 +13,71 @@ We aim to source our data directly from the most authorative data provider, fall
 #### **`general-election/UK/2015/model`**
 | Column | Type | Description | Example |
 | -- | -- | -- | -- |
-| `Press Association Reference` | int | Standardised constituency identifier | `1` |
-| `Constituency Name` | str | Constituency name | `Aberavon` |
-| `Region` | str | Region:{`East Midlands`, `Eastern`, `London`, `North East`, `North West`, `Northern Ireland`, `Scotland`, `South East`, `South West`, `Wales`, `West Midlands`, `Yorkshire and The Humber`} | `Wales` |
-| `Electorate` | int | Electorate | `50838` |
-| `Votes` | int | Valid votes counted | `30958` |
-| `Party` | str | Party | `con` |
-| `votes_last` | int | Votes counted in 2010 | `4411` |
-| `pc_last` | float | Percentage voteshare in 2010 | `0.142483365` |
-| `win_last` | str | Which party won in this constituency in 2010 | `lab` |
-| `polls_now` | float | National polling for this party in 2015 | `0.338181818` |
-| `swing_now` | float | Uplift in national polling for this party since 2010 | `-0.062020512` |
-| `swing_forecast_pc` | float | Projected voteshare for this party in this constituency using a UNS model | `0.133646473` |
-| `swing_forecast_win` | str | Projected winner in this constituency using a UNS model | `lab` |
-| `actual_win_now` | str | Which party actually won this constituency in 2015? | `lab` |
-| `actual_pc_now` | float | Actual percentage voteshare for this party in this constituency in 2015 | `0.118706976` |
-| `con` | int | Dummy: is Conservative party? | `1` |
-| `grn` | int | Dummy: is Green party? | `0` |
-| `lab` | int | Dummy: is Labour party? | `0` |
-| `ld` | int | Dummy: is Liberal Democrat party? | `0` |
-| `Region_East Midlands` | int | Dummied region | `0` |
-| `Region_Eastern` | int | Dummied region | `0` |
-| `Region_London` | int | Dummied region | `0` |
-| `Region_North East` | int | Dummied region | `0` |
-| `Region_North West` | int | Dummied region | `0` |
-| `Region_Northern Ireland` | int | Dummied region | `0` |
-| `Region_Scotland` | int | Dummied region | `0` |
-| `Region_South East` | int | Dummied region | `0` |
-| `Region_South West` | int | Dummied region | `0` |
-| `Region_Wales` | int | Dummied region | `1` |
-| `Region_West Midlands` | int | Dummied region | `0` |
-| `Region_Yorkshire and the Humber` | int | Dummied region | `0` |
-| `won_here_last` | int | Did this party win this constituency in 2010? | `0` |
-| `turnout` | float | Turnout in 2015 | `0.608953932` |
+| Constituency-level factors |
+| `ons_id` | int | ONS constituency identifier | `E14000530` |
+| `constituency` | str | Constituency name | `ALDERSHOT` |
+| `county` | str | County:{`Avon`, `Bedfordshire`, and 44 more} | `Hampshire` |
+| `region` | str | Region:{`East Midlands`, `Eastern`, `London`, `North East`, `North West`, `Northern Ireland`, `Scotland`, `South East`, `South West`, `Wales`, `West Midlands`, `Yorkshire and The Humber`} | `South East` |
+| `geo` | str | Geographic region (aggregated level between region and country) | `england_not_london` |
+| `country`| str | Country:{`England`, `Northern Ireland`, `Scotland`, `Wales`} | `England` |
+| 2010 election data |
+| `electorate` | int | Electorate | `72430` |
+| `total_votes_last` | int | Total valid votes counted in this constituency in the 2010 election | `45384` |
+| `party` | str | Party:{`apni`, `con`, `dup`, `grn`, `lab`, `ld`, `other`, `pc`, `sdlp`, `sf`, `snp`, `ukip`, `uup`} | `con` |
+| `votes_last` | int | Votes counted for this party in this constituency in 2010 | `21203` |
+| `voteshare_last` | float | Percentage voteshare for this party in this constituency in 2010 | `0.467191` |
+| `winner_last` | str | Party that won in this constituency in 2010 | `con` |
+| `won_here_last` | bool | Did this party win in this constituency in 2010 | `True` |
+| `national_voteshare_last` | float | Percentage of national voteshare for this party from 2010 results | `0.360543` |
+| 2015 pre-election data |
+| `national_polls_now` | float | Percentage of national voteshare for this party from 2015 pre-election polling | `0.338182` |
+| `national_swing` | float | Uplift in national voteshare for this party between 2010 results and 2015 polling | `-0.0620205` |
+| `national_swing_forecast` | str | Projected voteshare for this party in this constituency using a UNS model | `0.438216` |
+| `national_swing_winner` | str | Projected winner in this constituency using `national_swing_forecast` | `con` |
+| 2015 post-election data |
+| `total_votes_now` | int | Total valid votes counted in this constituency in the 2015 election | `46191` |
+| `turnout_now` | float | Turnout in this constituency in 2015 election | `0.637733` |
+| `votes_now` | int | Total votes counted for this party in this constituency in 2015 | `23369` |
+| `voteshare_now` | float | Percentage voteshare for this party in this constituency in 2015 | `0.505921` |
+| `winner_now` | str | Party that won in this constituency in 2015 | `con` |
+
+
+#### **`general-election/UK/2017/model`**
+| Column | Type | Description | Example |
+| -- | -- | -- | -- |
+| Constituency-level factors |
+| `ons_id` | int | ONS constituency identifier | `E14000530` |
+| `constituency` | str | Constituency name | `ALDERSHOT` |
+| `county` | str | County:{`Avon`, `Bedfordshire`, and 44 more} | `Hampshire` |
+| `region` | str | Region:{`East Midlands`, `Eastern`, `London`, `North East`, `North West`, `Northern Ireland`, `Scotland`, `South East`, `South West`, `Wales`, `West Midlands`, `Yorkshire and The Humber`} | `South East` |
+| `geo` | str | Geographic region (aggregated level between region and country) | `england_not_london` |
+| `country`| str | Country:{`England`, `Northern Ireland`, `Scotland`, `Wales`} | `England` |
+| 2015 election data |
+| `electorate` | int | Electorate | `76205` |
+| `total_votes_last` | int | Total valid votes counted in this constituency in the 2015 election | `46191` |
+| `party` | str | Party:{`apni`, `con`, `dup`, `grn`, `lab`, `ld`, `other`, `pc`, `sdlp`, `sf`, `snp`, `ukip`, `uup`} | `con` |
+| `votes_last` | int | Votes counted for this party in this constituency in 2015 | `23369` |
+| `voteshare_last` | float | Percentage voteshare for this party in this constituency in 2015 | `0.505921` |
+| `winner_last` | str | Party that won in this constituency in 2015 | `con` |
+| `won_here_last` | bool | Did this party win in this constituency in 2015 | `True` |
+| `national_voteshare_last` | float | Percentage of national voteshare for this party from 2015 results | `0.368095` |
+| 2017 pre-election data |
+| `national_polls_now` | float | Percentage of national voteshare for this party from 2017 pre-election polling | `0.427296` |
+| `national_swing` | float | Uplift in national voteshare for this party between 2015 results and 2017 polling | `0.16083` |
+| `national_swing_forecast` | str | Projected voteshare for this party in this constituency using a UNS model | `0.587288` |
+| `national_swing_winner` | str | Projected winner in this constituency using `national_swing_forecast` | `con` |
+| 2015/2017 regional data |
+| `geo_polls_now` | float | Percentage of regional voteshare for this party from 2017 pre-election polling | `0.470595` |
+| `geo_voteshare_last` | float | Percentage of regional voteshare for this party from 2015 results | `0.418217` |
+| `geo_swing` | float | Uplift in regional voteshare for this party between 2015 results and 2017 polling | `0.125242` |
+| `geo_swing_forecast` | float | Projected voteshare for this party in this constituency using a regional UNS model | `0.569283` |
+| `geo_swing_winner` | str | Projected winner in this constituency using `geo_swing_forecast` | `con` |
+| 2017 post-election data |
+| `total_votes_now` | int | Total valid votes counted in this constituency in the 2017 election | `48950` |
+| `turnout_now` | float | Turnout in this constituency in 2017 election | `0.642346` |
+| `votes_now` | int | Total votes counted for this party in this constituency in 2017 | `26950` |
+| `voteshare_now` | float | Percentage voteshare for this party in this constituency in 2017 | `0.550562` |
+| `winner_now` | str | Party that won in this constituency in 2017 | `con` |
 
 
 #### **`general-election/UK/2010/results`**
