@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2020-02-03
+### Changed
+- Model-ready datasets can now be "prediction-only" (i.e. for use pre-election when we don't know results).
+- Model-ready datasets include UKIP and BXP as part of "Other" until a better solution can be found.
+- Various changes to enable a better regional UNS forecast:
+    - better handling of NI parties;
+    - regional poll-of-polls goes back a month to incorporate large sample regional polling and not just sub-samples;
+    - MRP sample sizes are disregarded for weighted poll-of-polls;
+    - missing sample sizes (such as for polls derived from PollBase) are imputed using mean sample size within the same region;
+### Added
+- Merged SixFifty UK polling data (detailed inc. sample sizes) up to June 2017 with Mark Pack's PollBase which has less columns but all polls up to Dec 2019.
+- Incorporated regional polling & regional sub-samples for December 2019 from SixFifty. 
+- `general-election/UK/2019/model`: added model-ready dataset including UNS and regional UNS forecasts for the 2019 UK General Election.
+
 ## [0.0.12] - 2020-02-03
 ### Changed
 - `general-election/UK/2015/model`: model-ready dataset for just the 2015 UK General Election.
@@ -77,7 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Barebones functionality, Python package requirements (setup.py, Pipfile, .gitignore, LICENSE)
 
 
-[Unreleased]: https://github.com/john-sandall/maven/compare/v0.0.12...HEAD
+[Unreleased]: https://github.com/john-sandall/maven/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/john-sandall/maven/compare/v0.0.12...v0.1.0
 [0.0.12]: https://github.com/john-sandall/maven/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/john-sandall/maven/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/john-sandall/maven/compare/v0.0.9...v0.0.10
