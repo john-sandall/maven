@@ -84,7 +84,7 @@ class UKResults(Pipeline):
         results = results.drop(columns=cols_to_drop)
 
         # Sanitise column names
-        results.columns = [utils.sanitise(c) for c in results.columns]
+        results.columns = utils.sanitise(results.columns)
         results = results.rename(columns={"id": "ons_id", "country/region": "region"})
         results.columns = [c.replace("_votes", "") for c in results.columns]
 
@@ -224,6 +224,7 @@ class UKModel(Pipeline):
     now_date = None
     last = None
     now = None
+    prediction_only = False
 
     def load_results_data(self):
         """Load UK General Election results for consecutive elections with one row / party / constituency and add:
@@ -244,16 +245,25 @@ class UKModel(Pipeline):
         # Import general election results
         results = {}
         results[last] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{last}-results.csv")
-        results[now] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{now}-results.csv")
+        try:
+            results[now] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{now}-results.csv")
+        except FileNotFoundError:
+            self.prediction_only = True
+
         # Add geos
         results[last]["geo"] = results[last].region.map(self.geo_lookup)
-        results[now]["geo"] = results[now].region.map(self.geo_lookup)
+        if not self.prediction_only:
+            results[now]["geo"] = results[now].region.map(self.geo_lookup)
 
-        # Check constituencies are mergeable
-        assert (results[last].sort_values("ons_id").ons_id == results[now].sort_values("ons_id").ons_id).all()
+            # Check constituencies are mergeable
+            assert (results[last].sort_values("ons_id").ons_id == results[now].sort_values("ons_id").ons_id).all()
 
         # Add the winner for the results
-        for year in [last, now]:
+        if self.prediction_only:
+            years = [last]
+        else:
+            years = [last, now]
+        for year in years:
             res = results[year].copy()
             winners = self.calculate_winners(res, "voteshare")
             res["winner"] = res.ons_id.map(winners)
@@ -269,6 +279,20 @@ class UKModel(Pipeline):
 
             # Add boolean per row for if this party won this seat
             res["won_here"] = res.party == res.winner
+
+            # Remove UKIP to deal with Brexit Party voteshare matching problems
+            # TODO: This is not a great solution, need a better way to map in BXP for modelling 2019.
+            res_list = []
+            for constituency in res.ons_id.unique():
+                res_con = res[res.ons_id == constituency].copy()
+                for metric in ["votes", "voteshare"]:
+                    res_con.loc[res_con.party == "other", metric] = (
+                        res_con.loc[res_con.party == "other", metric].sum()
+                        + res_con.loc[res_con.party == "ukip", metric].sum()
+                    )
+                res_list.append(res_con.query('party != "ukip"').copy())
+            res = pd.concat(res_list, axis=0)
+
             results[year] = res.copy()
 
         return results
@@ -277,9 +301,13 @@ class UKModel(Pipeline):
         """Load polling data for UK General Elections."""
         polls = {}
         for geo in self.geos:
-            polls[geo] = pd.read_csv(
+            poll_df = pd.read_csv(
                 self.directory / "raw" / f"general_election-{geo}-polls.csv", parse_dates=["to"]
             ).sort_values("to")
+            poll_df.columns = utils.sanitise(
+                poll_df.columns, replace={"ulster_unionist_party": "uup", "sinn_fein": "sf", "alliance": "apni"}
+            )
+            polls[geo] = poll_df
 
         return polls
 
@@ -293,20 +321,32 @@ class UKModel(Pipeline):
         """
         election_day = self.now_date
         one_week_before = election_day - pd.Timedelta(days=7)
+        one_month_before = election_day - pd.Timedelta(days=30)
 
         # Use single last poll from each pollster in final week of polling then average out
         final_polls = {}
         for geo in self.geos:
+            period_before = one_week_before if geo == "uk" else one_month_before
             final_polls[geo] = self.calculate_poll_of_polls(
-                polls=polls[geo], from_date=one_week_before, to_date=election_day
+                polls=polls[geo], from_date=period_before, to_date=election_day
             )
+            # Consider MRPs equivalent to a large poll
+            final_polls[geo].loc[final_polls[geo].method == "MRP", "sample_size"] = (
+                final_polls[geo].query('method != "MRP"').sample_size.max()
+            )
+            # Handle missing sample sizes
+            mean_sample_size = final_polls[geo].query('method != "MRP"').sample_size.mean()
+            if pd.isnull(mean_sample_size):
+                mean_sample_size = 1
+            final_polls[geo]["sample_size"] = final_polls[geo].sample_size.fillna(mean_sample_size)
 
         # Calculate regional polling
         regional_polling_missing = any(final_polls[geo].empty for geo in self.geos)
 
         # Regional polling is missing, just calculate UK-level polling only.
         if regional_polling_missing:
-            parties = ["con", "lab", "ld", "ukip", "grn"]
+            # TODO: Check how this affects 2015/2017 models
+            parties = ["con", "lab", "ld", "ukip", "grn", "chuk", "bxp", "snp"]
             # Create new polls dictionary by geo containing simple average across all pollsters
             national_polling = final_polls["uk"].mean().loc[parties]
             # We don't yet have regional polling in 2015 for Scotland, Wales, NI, London - add as other.
@@ -325,12 +365,13 @@ class UKModel(Pipeline):
         # We have polling for all regions.
         else:
             parties = {
-                "uk": ["con", "lab", "ld", "ukip", "grn", "snp"],
-                "scotland": ["con", "lab", "ld", "ukip", "grn", "snp"],
-                "wales": ["con", "lab", "ld", "ukip", "grn", "pc"],
-                "ni": ["con", "ukip", "grn"],
-                "london": ["con", "lab", "ld", "ukip", "grn"],
-                "england_not_london": ["con", "lab", "ld", "ukip", "grn"],
+                # TODO: Add ["chuk", "bxp", "ukip"] to uk, scotland, wales, london
+                "uk": ["con", "lab", "ld", "grn", "snp"],
+                "scotland": ["con", "lab", "ld", "snp", "grn"],
+                "wales": ["con", "lab", "ld", "pc", "grn"],
+                "ni": ["dup", "uup", "sf", "sdlp", "apni", "grn", "con"],
+                "london": ["con", "lab", "ld", "grn"],
+                "england_not_london": ["con", "lab", "ld", "grn"],
             }
             all_parties = set(x for y in parties.values() for x in y)
             poll_of_polls = {}
@@ -361,9 +402,10 @@ class UKModel(Pipeline):
             # Fix PC (Plaid Cymru) for UK
             poll_of_polls["uk"]["pc"] = poll_of_polls["wales"]["pc"] * survation_wts["wales"] / survation_wts["uk"]
 
-            # Add Other
+            # Add Other & normalise
             for geo in self.geos + ["england_not_london"]:
-                poll_of_polls[geo]["other"] = 1 - poll_of_polls[geo].sum()
+                poll_of_polls[geo]["other"] = max(1 - poll_of_polls[geo].sum(), 0)  # weighted means can sum > 1
+                poll_of_polls[geo] = poll_of_polls[geo] / poll_of_polls[geo].sum()
 
             # Export
             polls_df_list = []
@@ -483,36 +525,63 @@ class UKModel(Pipeline):
 
     def export_model_ready_dataframe(self, results_dict):
         """Create ML-ready dataframe and export."""
-        df_cols_now = [
-            "ons_id",
-            "constituency",
-            "county",
-            "region",
-            "geo",
-            "country",
-            "electorate",
-            "total_votes",
-            "turnout",
-            "party",
-            "votes",
-            "voteshare",
-            "winner",
-        ]
-        df_cols_last = [
-            "ons_id",
-            "party",
-            "total_votes",
-            "turnout",
-            "votes",
-            "voteshare",
-            "national_polls",
-            "national_voteshare",
-            "national_swing",
-            "national_swing_forecast",
-            "national_swing_winner",
-            "winner",
-            "won_here",
-        ]
+
+        # Cols to select from results dfs
+        if self.prediction_only:
+            df_cols_last = [
+                "ons_id",
+                "constituency",
+                "county",
+                "region",
+                "geo",
+                "country",
+                "electorate",
+                "total_votes",
+                "turnout",
+                "party",
+                "votes",
+                "voteshare",
+                "national_polls",
+                "national_voteshare",
+                "national_swing",
+                "national_swing_forecast",
+                "national_swing_winner",
+                "winner",
+                "won_here",
+            ]
+        else:
+            df_cols_now = [
+                "ons_id",
+                "constituency",
+                "county",
+                "region",
+                "geo",
+                "country",
+                "electorate",
+                "total_votes",
+                "turnout",
+                "party",
+                "votes",
+                "voteshare",
+                "winner",
+            ]
+            df_cols_last = [
+                "ons_id",
+                "party",
+                "total_votes",
+                "turnout",
+                "votes",
+                "voteshare",
+                "national_polls",
+                "national_voteshare",
+                "national_swing",
+                "national_swing_forecast",
+                "national_swing_winner",
+                "winner",
+                "won_here",
+            ]
+
+        # Add geo polling if available
         df_cols_final_geo = []
         if "geo_polls" in results_dict[self.last].columns:
             df_cols_last += ["geo_polls", "geo_voteshare", "geo_swing", "geo_swing_forecast", "geo_swing_winner"]
@@ -523,32 +592,35 @@ class UKModel(Pipeline):
                 "geo_swing_forecast",
                 "geo_swing_winner",
             ]
-        df_cols_final = (
-            [
-                # Constant per constituency
-                "ons_id",
-                "constituency",
-                "county",
-                "region",
-                "geo",
-                "country",
-                "electorate",
-                "total_votes_last",
-                "turnout_last",
-                # Constant per party (per constituency)
-                "party",
-                "votes_last",
-                "voteshare_last",
-                "winner_last",
-                "won_here_last",
-                "national_voteshare_last",
-                "national_polls_now",
-                "national_swing",
-                "national_swing_forecast",
-                "national_swing_winner",
-            ]
-            + df_cols_final_geo
-            + [
+
+        # Specify cols to use in exported df
+        df_cols_final = [
+            # Constant per constituency
+            "ons_id",
+            "constituency",
+            "county",
+            "region",
+            "geo",
+            "country",
+            "electorate",
+            "total_votes_last",
+            "turnout_last",
+            # Constant per party (per constituency)
+            "party",
+            "votes_last",
+            "voteshare_last",
+            "winner_last",
+            "won_here_last",
+            "national_voteshare_last",
+            "national_polls_now",
+            "national_swing",
+            "national_swing_forecast",
+            "national_swing_winner",
+        ] + df_cols_final_geo
+
+        # If we have results data for now, let's add that
+        if not self.prediction_only:
+            df_cols_final += [
                 # Target
                 "total_votes_now",
                 "turnout_now",
@@ -556,24 +628,15 @@ class UKModel(Pipeline):
                 "voteshare_now",
                 "winner_now",
             ]
-        )
-        df = (
-            results_dict[self.now][df_cols_now]
-            .rename(
-                columns={
-                    "total_votes": "total_votes_now",
-                    "turnout": "turnout_now",
-                    "votes": "votes_now",
-                    "voteshare": "voteshare_now",
-                    "winner": "winner_now",
-                }
-            )
-            .merge(
-                # Note: even though polling represents "now", they're in results[last] to calculate swings.
-                results_dict[self.last][df_cols_last].rename(
+
+        # Build dataframe for export
+        if self.prediction_only:
+            df = (
+                results_dict[self.last][df_cols_last]
+                .rename(
                     columns={
                         "total_votes": "total_votes_last",
-                        "turnout": "turnout_now_last",
+                        "turnout": "turnout_last",
                         "votes": "votes_last",
                         "voteshare": "voteshare_last",
                         "national_polls": "national_polls_now",
@@ -583,13 +646,77 @@ class UKModel(Pipeline):
                         "winner": "winner_last",
                         "won_here": "won_here_last",
                     }
-                ),
-                on=["ons_id", "party"],
-                how="inner",
-                validate="1:1",
+                )
+                .filter(df_cols_final)
             )
-            .filter(df_cols_final)
-        )
+        else:
+            df_cols_final = (
+                [
+                    # Constant per constituency
+                    "ons_id",
+                    "constituency",
+                    "county",
+                    "region",
+                    "geo",
+                    "country",
+                    "electorate",
+                    "total_votes_last",
+                    "turnout_last",
+                    # Constant per party (per constituency)
+                    "party",
+                    "votes_last",
+                    "voteshare_last",
+                    "winner_last",
+                    "won_here_last",
+                    "national_voteshare_last",
+                    "national_polls_now",
+                    "national_swing",
+                    "national_swing_forecast",
+                    "national_swing_winner",
+                ]
+                + df_cols_final_geo
+                + [
+                    # Target
+                    "total_votes_now",
+                    "turnout_now",
+                    "votes_now",
+                    "voteshare_now",
+                    "winner_now",
+                ]
+            )
+            df = (
+                results_dict[self.now][df_cols_now]
+                .rename(
+                    columns={
+                        "total_votes": "total_votes_now",
+                        "turnout": "turnout_now",
+                        "votes": "votes_now",
+                        "voteshare": "voteshare_now",
+                        "winner": "winner_now",
+                    }
+                )
+                .merge(
+                    # Note: even though polling represents "now", they're in results[last] to calculate swings.
+                    results_dict[self.last][df_cols_last].rename(
+                        columns={
+                            "total_votes": "total_votes_last",
+                            "turnout": "turnout_last",
+                            "votes": "votes_last",
+                            "voteshare": "voteshare_last",
+                            "national_polls": "national_polls_now",
+                            "geo_polls": "geo_polls_now",
+                            "national_voteshare": "national_voteshare_last",
+                            "geo_voteshare": "geo_voteshare_last",
+                            "winner": "winner_last",
+                            "won_here": "won_here_last",
+                        }
+                    ),
+                    on=["ons_id", "party"],
+                    how="inner",
+                    validate="1:1",
+                )
+                .filter(df_cols_final)
+            )
 
         return df
 
@@ -622,79 +749,3 @@ class UKModel(Pipeline):
 
         print(f"Exporting {self.last}->{self.now} model dataset to {processed_directory.resolve()}")
         model_df.to_csv(processed_directory / f"general_election-uk-{self.now}-model.csv", index=False)
-
-        # Think this is what we use if predicting and don't have results? Therefore will need to check for 2019 modelling df.
-        # df_cols_last = [
-        #     "ons_id",
-        #     "constituency",
-        #     "county",
-        #     "region",
-        #     "geo",
-        #     "country",
-        #     "electorate",
-        #     "total_votes",
-        #     "turnout",
-        #     "party",
-        #     "votes",
-        #     "voteshare",
-        #     "winner",
-        #     "won_here",
-        #     "national_polls",
-        #     "national_voteshare",
-        #     "national_swing",
-        #     "national_swing_forecast",
-        #     "national_swing_winner",
-        # ]
-        # df_cols_final_geo = []
-        # if "geo_polls" in results[last].columns:
-        #     df_cols_last += ["geo_polls", "geo_voteshare", "geo_swing", "geo_swing_forecast", "geo_swing_winner"]
-        #     df_cols_final_geo += [
-        #         "geo_polls_now",
-        #         "geo_voteshare_last",
-        #         "geo_swing",
-        #         "geo_swing_forecast",
-        #         "geo_swing_winner",
-        #     ]
-        # df_cols_final = [
-        #     # Constant per constituency
-        #     "ons_id",
-        #     "constituency",
-        #     "county",
-        #     "region",
-        #     "geo",
-        #     "country",
-        #     "electorate",
-        #     "total_votes_last",
-        #     "turnout_last",
-        #     # Constant per party (per constituency)
-        #     "party",
-        #     "votes_last",
-        #     "voteshare_last",
-        #     "winner_last",
-        #     "won_here_last",
-        #     "national_voteshare_last",
-        #     "national_polls_now",
-        #     "national_swing",
-        #     "national_swing_forecast",
-        #     "national_swing_winner",
-        # ] + df_cols_final_geo
-        # df = (
-        #     results[last][df_cols_last]
-        #     .rename(
-        #         columns={
-        #             "total_votes": "total_votes_last",
-        #             "turnout": "turnout_last",
-        #             "votes": "votes_last",
-        #             "voteshare": "voteshare_last",
-        #             "national_polls": "national_polls_now",
-        #             "geo_polls": "geo_polls_now",
-        #             "national_voteshare": "national_voteshare_last",
-        #             "geo_voteshare": "geo_voteshare_last",
-        #             "winner": "winner_last",
-        #             "won_here": "won_here_last",
-        #         }
-        #     )
-        #     .filter(df_cols_final)
-        # )
-        # print(f"Exporting {last}->{now} model dataset to {processed_directory.resolve()}")
-        # df.to_csv(processed_directory / f"general_election-uk-{now}-model.csv", index=False)

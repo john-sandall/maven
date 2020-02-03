@@ -7,6 +7,7 @@ import shutil
 import warnings
 from urllib.parse import urlparse
 
+import pandas as pd
 import requests
 
 import maven
@@ -16,8 +17,16 @@ import maven
 #########
 
 
-def sanitise(x):
-    return x.lower().replace(" ", "_")
+def sanitise(x, replace=None):
+    if isinstance(x, str):
+        out = x.lower().replace(" ", "_")
+        if replace and out in replace:
+            out = replace[out]
+        return out
+    elif isinstance(x, (list, pd.core.indexes.base.Index, pd.core.series.Series)):
+        return [sanitise(element, replace=replace) for element in x]
+    else:
+        raise TypeError(f"Unexpected type encountered in sanitise: type(x) == '{type(x)}'")
 
 
 def calculate_md5_checksum(filename):
