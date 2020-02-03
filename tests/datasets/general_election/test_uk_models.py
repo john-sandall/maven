@@ -19,6 +19,7 @@ def check_uk_model_output(identifier, output_file):
     maven.get(identifier, data_directory="./data/")
     df = pd.read_csv(Path("./data") / identifier / "processed" / output_file)
     geo_columns = []
+    target_columns = []
     if "geo_polls_now" in df.columns:
         geo_columns += [
             "geo_polls_now",
@@ -27,6 +28,8 @@ def check_uk_model_output(identifier, output_file):
             "geo_swing_forecast",
             "geo_swing_winner",
         ]
+    if "total_votes_now" in df.columns:
+        target_columns += ["total_votes_now", "turnout_now", "votes_now", "voteshare_now", "winner_now"]
     column_list = (
         [
             "ons_id",
@@ -37,6 +40,7 @@ def check_uk_model_output(identifier, output_file):
             "country",
             "electorate",
             "total_votes_last",
+            "turnout_last",
             "party",
             "votes_last",
             "voteshare_last",
@@ -49,9 +53,9 @@ def check_uk_model_output(identifier, output_file):
             "national_swing_winner",
         ]
         + geo_columns
-        + ["total_votes_now", "turnout_now", "votes_now", "voteshare_now", "winner_now",]
+        + target_columns
     )
-    assert df.shape == (8450, len(column_list))
+    assert df.shape == (7800, len(column_list))
     assert df.columns.tolist() == column_list
 
 
@@ -61,3 +65,7 @@ def test_uk_2015_model():
 
 def test_uk_2017_model():
     check_uk_model_output(identifier="general-election/UK/2017/model", output_file="general_election-uk-2017-model.csv")
+
+
+def test_uk_2019_model():
+    check_uk_model_output(identifier="general-election/UK/2019/model", output_file="general_election-uk-2019-model.csv")

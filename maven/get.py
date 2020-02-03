@@ -29,6 +29,7 @@ def get(name, data_directory=Path("."), retrieve=True, process=True):
         "general-election/UK/2015/results": general_election.UK2015Results,
         "general-election/UK/2017/model": general_election.UK2017Model,
         "general-election/UK/2017/results": general_election.UK2017Results,
+        "general-election/UK/2019/model": general_election.UK2019Model,
         "general-election/UK/polls": general_election.UKPolls,
     }
     if name not in mapper:
