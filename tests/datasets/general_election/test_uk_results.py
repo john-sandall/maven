@@ -50,3 +50,9 @@ def test_uk_2017_results():
     check_uk_hoc_results_data(
         identifier="general-election/UK/2017/results", processed_filename="general_election-uk-2017-results.csv"
     )
+
+
+def test_uk_2019_results():
+    check_uk_hoc_results_data(
+        identifier="general-election/UK/2019/results", processed_filename="general_election-uk-2019-results.csv"
+    )
