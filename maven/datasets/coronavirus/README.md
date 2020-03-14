@@ -7,7 +7,7 @@ If you have any questions about these datasets please [contact me @John_Sandall]
 We aim to source our data directly from the most authorative data provider, falling back to less authorative sources where a primary source isn't available.
 
 Global providers/aggregators:
-- [Johns Hopkins Center for Systems Science and Engineering](https://github.com/CSSEGISandData).
+- [Johns Hopkins Center for Systems Science and Engineering](https://github.com/CSSEGISandData/COVID-19/).
 
 
 ## Data dictionaries
