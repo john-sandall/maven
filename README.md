@@ -28,6 +28,9 @@ Data dictionaries for all datasets are available by clicking on the dataset's na
 
 | Dataset | Description | Date | Source | Licence |
 | -- | -- | -- | -- | -- |
+| **Coronavirus Datasets** |
+| [**`coronavirus/CSSE`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/coronavirus) | Daily CSSE cases/deaths/recovered by country/region/state | Updated daily | [Johns Hopkins Center for Systems Science and Engineering](https://github.com/CSSEGISandData/COVID-19/) | [See "Terms of Use" on CSSE repo](https://github.com/CSSEGISandData/COVID-19/) |
+| **UK Political Datasets** |
 | [**`general-election/UK/2010/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2010 General Election results | 6th May 2010 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
 | [**`general-election/UK/2015/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2015 General Election results | 7th May 2015 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |
 | [**`general-election/UK/2017/results`**](https://github.com/john-sandall/maven/tree/master/maven/datasets/general_election) | UK 2017 General Election results | 8th June 2017 | [House of Commons Library](https://researchbriefings.parliament.uk/ResearchBriefing/Summary/CBP-8647) | [Open Parliament Licence v3.0](https://www.parliament.uk/site-information/copyright-parliament/open-parliament-licence/) |

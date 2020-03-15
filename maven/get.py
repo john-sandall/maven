@@ -8,7 +8,7 @@ Example usage:
 
 from pathlib import Path
 
-from .datasets import general_election
+from .datasets import coronavirus, general_election
 
 
 def get(name, data_directory=Path("."), retrieve=True, process=True):
@@ -24,12 +24,13 @@ def get(name, data_directory=Path("."), retrieve=True, process=True):
     Returns: Nothing (datasets are placed into current working directory).
     """
     mapper = {
+        "coronavirus/CSSE": coronavirus.CSSE,
         "general-election/UK/2010/results": general_election.UK2010Results,
         "general-election/UK/2015/model": general_election.UK2015Model,
         "general-election/UK/2015/results": general_election.UK2015Results,
         "general-election/UK/2017/model": general_election.UK2017Model,
         "general-election/UK/2017/results": general_election.UK2017Results,
-        "general-election/UK/2019/model": general_election.UK2019Model,
+        # "general-election/UK/2019/model": general_election.UK2019Model,
         "general-election/UK/polls": general_election.UKPolls,
     }
     if name not in mapper:
