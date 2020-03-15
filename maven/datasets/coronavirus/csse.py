@@ -30,19 +30,20 @@ class CSSE(utils.Pipeline):
         )
         self.sources = [
             # url, filename, checksum
-            (base_url, "time_series_19-covid-Confirmed.csv", None,),
-            (base_url, "time_series_19-covid-Deaths.csv", None,),
-            (base_url, "time_series_19-covid-Recovered.csv", None,),
+            (base_url, "time_series_19-covid-Confirmed.csv", "09b6dfc1ee244ba652b8639f0aa2f093"),
+            (base_url, "time_series_19-covid-Deaths.csv", "69a9dfa8a901c8f0bbe0f6499db8641c"),
+            (base_url, "time_series_19-covid-Recovered.csv", "4d1c1d4f1c45514e3562cb42ef2729c7"),
         ]
         self.targets = [
             # filename, checksum(
-            ("CSSE_country_province.csv", None),
-            ("CSSE_country.csv", None),
+            ("CSSE_country_province.csv", "bfce6bf16571fbb3004f9e5eee7b9e30"),
+            ("CSSE_country.csv", "b5b3ed6fc75f323593fd7710a4262e1b"),
         ]
         # Config
         self.rename_source = False
         self.retrieve_all = True
         self.cache = True
+        self.verbose = False
         self.verbose_name = "CSSE"
 
     def process(self):

@@ -9,3 +9,7 @@ maven.egg-info/
 
 # IDE ignores
 .vscode
+
+# Checklists
+DEPLOY
+REVIEW
