@@ -110,7 +110,7 @@ class UKResults(Pipeline):
 
         # Sanitise column names
         results.columns = utils.sanitise(results.columns)
-        results = results.rename(columns={"id": "ons_id", "country/region": "region"})
+        results = results.rename(columns={"id": "ons_id", "country_region": "region"})
         results.columns = [c.replace("_votes", "") for c in results.columns]
 
         # Reshape to long
@@ -821,4 +821,3 @@ class UKModel(Pipeline):
         model_df.to_csv(
             processed_directory / f"general_election-uk-{self.now}-model.csv", index=False
         )
-
