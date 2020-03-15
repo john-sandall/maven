@@ -29,9 +29,13 @@ class Pipeline:
         os.makedirs(target_dir, exist_ok=True)  # create directory if it doesn't exist
         for url, filename, md5_checksum in self.sources:
             if utils.is_url(url):
-                processing_fn = partial(utils.fetch_url, url=url, filename=filename, target_dir=target_dir)
+                processing_fn = partial(
+                    utils.fetch_url, url=url, filename=filename, target_dir=target_dir
+                )
             else:
-                processing_fn = partial(utils.get_and_copy, identifier=url, filename=filename, target_dir=target_dir)
+                processing_fn = partial(
+                    utils.get_and_copy, identifier=url, filename=filename, target_dir=target_dir
+                )
             utils.retrieve_from_cache_if_exists(
                 filename=filename,
                 target_dir=target_dir,
@@ -58,9 +62,27 @@ class UKResults(Pipeline):
     def process_hoc_sheet(input_file, data_dir, sheet_name):
         # Import general election results
         print(f"Read and clean {input_file}")
-        parties = ["Con", "LD", "Lab", "UKIP", "Grn", "SNP", "PC", "DUP", "SF", "SDLP", "UUP", "APNI", "Other"]
+        parties = [
+            "Con",
+            "LD",
+            "Lab",
+            "UKIP",
+            "Grn",
+            "SNP",
+            "PC",
+            "DUP",
+            "SF",
+            "SDLP",
+            "UUP",
+            "APNI",
+            "Other",
+        ]
         results = pd.read_excel(
-            data_dir / "raw" / input_file, sheet_name=sheet_name, skiprows=4, header=None, skipfooter=19
+            data_dir / "raw" / input_file,
+            sheet_name=sheet_name,
+            skiprows=4,
+            header=None,
+            skipfooter=19,
         )
         assert results.shape == (650, 49)
 
@@ -73,9 +95,12 @@ class UKResults(Pipeline):
 
         # Some basic data quality checks
         for party in parties:
-            assert (results[f"{party}_Voteshare"] - results[f"{party}_Votes"] / results["Total votes"]).sum() == 0
+            assert (
+                results[f"{party}_Voteshare"] - results[f"{party}_Votes"] / results["Total votes"]
+            ).sum() == 0
         assert (
-            results[[f"{party}_Votes" for party in parties]].fillna(0.0).sum(axis=1) == results["Total votes"]
+            results[[f"{party}_Votes" for party in parties]].fillna(0.0).sum(axis=1)
+            == results["Total votes"]
         ).all()
         assert ((results["Total votes"] / results["Electorate"]) == results["Turnout"]).all()
 
@@ -105,7 +130,9 @@ class UKResults(Pipeline):
         results_long = results_long.sort_values(["ons_id", "party"]).reset_index(drop=True)
 
         # Re-add total_votes & voteshare
-        results_long["total_votes"] = results_long.ons_id.map(results_long.groupby("ons_id").votes.sum().astype(int))
+        results_long["total_votes"] = results_long.ons_id.map(
+            results_long.groupby("ons_id").votes.sum().astype(int)
+        )
         results_long["voteshare"] = results_long["votes"] / results_long["total_votes"]
         results_long["turnout"] = results_long["total_votes"] / results_long["electorate"]
 
@@ -132,11 +159,15 @@ class UKResults(Pipeline):
         """Process results data for a UK General Election."""
         filename = self.sources[0][1]
         processed_results_location = self.directory / "processed" / self.target[0]
-        os.makedirs(self.directory / "processed", exist_ok=True)  # create directory if it doesn't exist
+        os.makedirs(
+            self.directory / "processed", exist_ok=True
+        )  # create directory if it doesn't exist
 
         def process_and_export():
             # Either caching disabled or file not yet processed; process regardless.
-            results = self.process_hoc_sheet(input_file=filename, data_dir=self.directory, sheet_name=str(self.year))
+            results = self.process_hoc_sheet(
+                input_file=filename, data_dir=self.directory, sheet_name=str(self.year)
+            )
             # Export
             print(f"Exporting dataset to {processed_results_location.resolve()}")
             results.to_csv(processed_results_location, index=False)
@@ -215,7 +246,10 @@ class UKModel(Pipeline):
     winner_fixes = {
         2010: [
             # https://en.wikipedia.org/wiki/Fermanagh_and_South_Tyrone_(UK_Parliament_constituency)
-            ("N06000007", "sf"),  # SF = 21,304, Independent Unionist (with DUP support) = 21,300, Independent = 188
+            (
+                "N06000007",
+                "sf",
+            ),  # SF = 21,304, Independent Unionist (with DUP support) = 21,300, Independent = 188
         ]
     }
 
@@ -244,9 +278,13 @@ class UKModel(Pipeline):
 
         # Import general election results
         results = {}
-        results[last] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{last}-results.csv")
+        results[last] = pd.read_csv(
+            self.directory / "raw" / f"general_election-uk-{last}-results.csv"
+        )
         try:
-            results[now] = pd.read_csv(self.directory / "raw" / f"general_election-uk-{now}-results.csv")
+            results[now] = pd.read_csv(
+                self.directory / "raw" / f"general_election-uk-{now}-results.csv"
+            )
         except FileNotFoundError:
             self.prediction_only = True
 
@@ -256,7 +294,10 @@ class UKModel(Pipeline):
             results[now]["geo"] = results[now].region.map(self.geo_lookup)
 
             # Check constituencies are mergeable
-            assert (results[last].sort_values("ons_id").ons_id == results[now].sort_values("ons_id").ons_id).all()
+            assert (
+                results[last].sort_values("ons_id").ons_id
+                == results[now].sort_values("ons_id").ons_id
+            ).all()
 
         # Add the winner for the results
         if self.prediction_only:
@@ -305,7 +346,8 @@ class UKModel(Pipeline):
                 self.directory / "raw" / f"general_election-{geo}-polls.csv", parse_dates=["to"]
             ).sort_values("to")
             poll_df.columns = utils.sanitise(
-                poll_df.columns, replace={"ulster_unionist_party": "uup", "sinn_fein": "sf", "alliance": "apni"}
+                poll_df.columns,
+                replace={"ulster_unionist_party": "uup", "sinn_fein": "sf", "alliance": "apni"},
             )
             polls[geo] = poll_df
 
@@ -357,7 +399,11 @@ class UKModel(Pipeline):
             for geo in poll_of_polls:
                 polls_df_list.append(
                     pd.DataFrame(
-                        {"geo": geo, "party": poll_of_polls[geo].index, "voteshare": poll_of_polls[geo]}
+                        {
+                            "geo": geo,
+                            "party": poll_of_polls[geo].index,
+                            "voteshare": poll_of_polls[geo],
+                        }
                     ).reset_index(drop=True)
                 )
             polls_df = pd.concat(polls_df_list, axis=0)
@@ -376,7 +422,9 @@ class UKModel(Pipeline):
             all_parties = set(x for y in parties.values() for x in y)
             poll_of_polls = {}
             for geo in self.geos:
-                sample_size_weights = final_polls[geo].sample_size / final_polls[geo].sample_size.sum()
+                sample_size_weights = (
+                    final_polls[geo].sample_size / final_polls[geo].sample_size.sum()
+                )
                 weighted_poll_of_polls = (
                     final_polls[geo][parties[geo]]
                     .multiply(sample_size_weights, axis=0)
@@ -394,17 +442,23 @@ class UKModel(Pipeline):
 
             england_not_london = poll_of_polls["uk"] * survation_wts["uk"]
             for geo in ["scotland", "wales", "ni", "london"]:
-                england_not_london = england_not_london.sub(poll_of_polls[geo] * survation_wts[geo], fill_value=0.0)
+                england_not_london = england_not_london.sub(
+                    poll_of_polls[geo] * survation_wts[geo], fill_value=0.0
+                )
             england_not_london /= survation_wts["england_not_london"]
             england_not_london.loc[["pc", "snp"]] = 0.0
             poll_of_polls["england_not_london"] = england_not_london
 
             # Fix PC (Plaid Cymru) for UK
-            poll_of_polls["uk"]["pc"] = poll_of_polls["wales"]["pc"] * survation_wts["wales"] / survation_wts["uk"]
+            poll_of_polls["uk"]["pc"] = (
+                poll_of_polls["wales"]["pc"] * survation_wts["wales"] / survation_wts["uk"]
+            )
 
             # Add Other & normalise
             for geo in self.geos + ["england_not_london"]:
-                poll_of_polls[geo]["other"] = max(1 - poll_of_polls[geo].sum(), 0)  # weighted means can sum > 1
+                poll_of_polls[geo]["other"] = max(
+                    1 - poll_of_polls[geo].sum(), 0
+                )  # weighted means can sum > 1
                 poll_of_polls[geo] = poll_of_polls[geo] / poll_of_polls[geo].sum()
 
             # Export
@@ -412,7 +466,11 @@ class UKModel(Pipeline):
             for geo in poll_of_polls:
                 polls_df_list.append(
                     pd.DataFrame(
-                        {"geo": geo, "party": poll_of_polls[geo].index, "voteshare": poll_of_polls[geo]}
+                        {
+                            "geo": geo,
+                            "party": poll_of_polls[geo].index,
+                            "voteshare": poll_of_polls[geo],
+                        }
                     ).reset_index(drop=True)
                 )
             polls_df = pd.concat(polls_df_list, axis=0)
@@ -506,9 +564,13 @@ class UKModel(Pipeline):
             .reset_index()
             .merge(votes_by_geo, on="geo", how="left", suffixes=("", "_geo"))
         )
-        votes_by_geo_by_party["geo_voteshare"] = votes_by_geo_by_party.votes / votes_by_geo_by_party.votes_geo
+        votes_by_geo_by_party["geo_voteshare"] = (
+            votes_by_geo_by_party.votes / votes_by_geo_by_party.votes_geo
+        )
         results = results.merge(
-            votes_by_geo_by_party[["geo", "party", "geo_voteshare"]], on=["geo", "party"], how="left"
+            votes_by_geo_by_party[["geo", "party", "geo_voteshare"]],
+            on=["geo", "party"],
+            how="left",
         )
 
         # Calculate geo-swing between last election results and latest geo-polls
@@ -584,7 +646,13 @@ class UKModel(Pipeline):
         # Add geo polling if available
         df_cols_final_geo = []
         if "geo_polls" in results_dict[self.last].columns:
-            df_cols_last += ["geo_polls", "geo_voteshare", "geo_swing", "geo_swing_forecast", "geo_swing_winner"]
+            df_cols_last += [
+                "geo_polls",
+                "geo_voteshare",
+                "geo_swing",
+                "geo_swing_forecast",
+                "geo_swing_winner",
+            ]
             df_cols_final_geo += [
                 "geo_polls_now",
                 "geo_voteshare_last",
@@ -734,7 +802,9 @@ class UKModel(Pipeline):
         polls = self.get_regional_and_national_poll_of_polls(polls=polls_full)
 
         # Merge polls into previous election results dataframe
-        results_dict[self.last] = self.combine_results_and_polls(results=results_dict[self.last], polls=polls)
+        results_dict[self.last] = self.combine_results_and_polls(
+            results=results_dict[self.last], polls=polls
+        )
 
         # Add into previous election results: national voteshare, national swing (vs current polling),
         # national swing forecast (per party per seat) and national swing forecast winner (per seat).
@@ -748,4 +818,7 @@ class UKModel(Pipeline):
         model_df = self.export_model_ready_dataframe(results_dict=results_dict)
 
         print(f"Exporting {self.last}->{self.now} model dataset to {processed_directory.resolve()}")
-        model_df.to_csv(processed_directory / f"general_election-uk-{self.now}-model.csv", index=False)
+        model_df.to_csv(
+            processed_directory / f"general_election-uk-{self.now}-model.csv", index=False
+        )
+
