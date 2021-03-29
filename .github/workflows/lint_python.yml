@@ -12,6 +12,7 @@ jobs:
       - run: codespell --ignore-words-list="humber,ons" --quiet-level=2 || true
       - run: flake8 . --count --max-line-length=133 --show-source --statistics
       - run: isort --check-only --profile black . || true
+      - run: pip install pandas
       - run: pip install -r requirements.txt
       - run: mypy --ignore-missing-imports .
       - run: pytest . || true
