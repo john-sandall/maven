@@ -5,7 +5,6 @@ Usage:
     > import maven
     > maven.get('general-election/UK/2019/model', data_directory='./data/')
 """
-import os
 from pathlib import Path
 
 import pandas as pd
