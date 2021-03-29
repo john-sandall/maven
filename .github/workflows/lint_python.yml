@@ -10,7 +10,7 @@ jobs:
       - run: bandit --recursive --skip B101 . || true
       - run: black --check . || true
       - run: codespell --ignore-words-list="humber,ons" --quiet-level=2 || true  # --skip=""
-      - run: flake8 . --count --show-source --statistics
+      - run: flake8 . --count --ignore=F401 --maxline-length=112 --show-source --statistics
       - run: isort --check-only --profile black . || true
       - run: pip install -r requirements.txt
       - run: mypy --ignore-missing-imports .
