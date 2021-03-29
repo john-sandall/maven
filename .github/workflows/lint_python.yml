@@ -7,12 +7,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - run: pip install bandit black codespell flake8 isort mypy pytest pyupgrade safety
-      - run: bandit -r -s b101 . || true
+      - run: bandit --recursive --skip B101 . || true
       - run: black --check . || true
       - run: codespell --ignore-words-list="humber,ons" --quiet-level=2 || true  # --skip=""
-      - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - run: flake8 . --count --show-source --statistics
       - run: isort --check-only --profile black . || true
-      - run: pip install pandas -r requirements.txt || true
+      - run: pip install -r requirements.txt
       - run: mypy --ignore-missing-imports .
       - run: pytest . || true
       - run: pytest --doctest-modules . || true
