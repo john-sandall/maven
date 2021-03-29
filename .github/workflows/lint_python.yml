@@ -3,9 +3,15 @@ on: [pull_request, push]
 jobs:
   lint_python:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
       - run: pip install bandit black codespell flake8 isort mypy pytest pyupgrade safety wheel
       - run: bandit --recursive --skip B101 . || true
       - run: black --check . || true
