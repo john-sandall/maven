@@ -1,4 +1,4 @@
 -c requirements.txt
-ipython==7.9.0
+ipython==7.16.3
 pip-tools==4.2.0
 pytest==5.2.2
