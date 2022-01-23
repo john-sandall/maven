@@ -46,7 +46,7 @@ ptyprocess==0.6.0
     # via pexpect
 py==1.8.0
     # via pytest
-pygments==2.4.2
+pygments==2.7.4
     # via ipython
 pyparsing==2.4.5
     # via packaging
