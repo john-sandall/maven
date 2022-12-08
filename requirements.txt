@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
-certifi==2019.6.16        # via requests
+certifi==2022.12.7        # via requests
 chardet==3.0.4            # via requests
 idna==2.8                 # via requests
 numpy==1.16.4             # via pandas
